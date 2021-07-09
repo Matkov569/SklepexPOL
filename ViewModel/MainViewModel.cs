@@ -18,6 +18,7 @@ namespace SklepexPOL.ViewModel
         //zdarzenie wywoływane w chwili zmiany własności o której chcemy powiadomić
         //żeby zaktualizowany został widok
 
+        //Widoczność menu/gry
         private Visibility menuVis = Visibility.Visible;
         public Visibility MenuVis
         {
@@ -38,17 +39,7 @@ namespace SklepexPOL.ViewModel
                 onPropertyChanged(nameof(GameVis));
             }
         }
-        private object content = new View.menu();
-        public object Content
-        {
-            get { return content; }
-            set 
-            {
-                content = value;
-                onPropertyChanged(nameof(Content));
-            }
-        }
-        
+        //komendy zmiany widoczności
         private ICommand windowMenu;
         public ICommand WindowMenu
         {
@@ -72,47 +63,41 @@ namespace SklepexPOL.ViewModel
                 return windowGame ?? new RelayCommand(prop => gameWindow(), null);
             }
         }
-
+        
         private void gameWindow()
         {
             MenuVis = Visibility.Collapsed;
             GameVis = Visibility.Visible;
         }
-        /*private Model.Lottery lottery=new Model.Lottery();
-
-
-        private int[] randomNumbers;
-        public int[] RandomNumbers
+        //komendy otworzenia pliku z instrukcją
+        private ICommand infoPdf;
+        public ICommand InfoPdf
         {
-            get { return randomNumbers; }
-            private set
+            get
             {
-                randomNumbers = value;
-               
-                //zgłoszenie zmiany wartości tej własności
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RandomNumbers)));
+                return infoPdf ?? new RelayCommand(prop => showInfo(), null);
             }
         }
 
-
-        //polecenie 
-        private ICommand randomization;
-
-        public ICommand Randomization
+        private void showInfo()
         {
-            get {
-                // jesli nie jest określone polecenie to tworzymy je i zwracamy poprozez 
-                //pomocniczy typ RelayCommand
-                return randomization ?? (randomization=new BaseClass.RelayCommand(
-                    //co wykonuje polecenie
-                    (p)=> { RandomNumbers=lottery.LotteryRandom();}
-                    , 
-                    //warunek kiedy może je wykonać
-                    p=>true )
-                    );
+            //utworzyć instrukcje i podpiąc jej plik
+            System.Diagnostics.Process.Start("test.pdf");
+        }
+
+        private ICommand exitGame;
+        public ICommand ExitGame
+        {
+            get
+            {
+                return exitGame ?? new RelayCommand(prop => byeBye(), null);
             }
         }
-        */
+
+        private void byeBye()
+        {
+            System.Windows.Application.Current.Shutdown();
+        }
 
     }
 }

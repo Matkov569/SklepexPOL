@@ -90,8 +90,8 @@
         <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
             <Button IsEnabled="False">Kontynuuj</Button>
             <Button Command="{Binding WindowGame}">Nowa gra</Button>
-            <Button>Instrukcja obsługi</Button>
-            <Button>Wyjście</Button>
+            <Button Command="{Binding InfoPdf}">Instrukcja obsługi</Button>
+            <Button Command="{Binding ExitGame}">Wyjście</Button>
         </StackPanel>
     </Grid>
 </UserControl>
