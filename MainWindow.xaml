@@ -4,9 +4,14 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SklepexPOL"
+        xmlns:vm="clr-namespace:SklepexPOL.ViewModel"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="720" Width="1280">
+    <Window.DataContext>
+        <vm:MainViewModel x:Name="vm"/>
+    </Window.DataContext>
     <Grid>
-        
+        <ContentControl x:Name="menuContent" Visibility="{Binding Path=MenuVis}"/>
+        <ContentControl x:Name="gameContent" Visibility="{Binding Path=GameVis}"/>
     </Grid>
 </Window>

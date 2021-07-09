@@ -23,6 +23,20 @@ namespace SklepexPOL
         public MainWindow()
         {
             InitializeComponent();
+            this.menuContent.Content = new View.menu();
+            this.gameContent.Content = new View.game();
+        }
+        public void gameStart()
+        {
+            Console.WriteLine("gameStart");
+            menuContent.Visibility = Visibility.Collapsed;
+            gameContent.Visibility = Visibility.Visible;
+        }
+        public void goMenu()
+        {
+            Console.WriteLine("goMenu");
+            menuContent.Visibility = Visibility.Visible;
+            gameContent.Visibility = Visibility.Collapsed;
         }
     }
 }
