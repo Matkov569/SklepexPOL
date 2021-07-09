@@ -104,6 +104,8 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <Resource Include="fonts\DS-DIGIB.TTF" />
+    <Resource Include="fonts\DS-DIGI.TTF" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -114,6 +116,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="images\tlo.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="fonts\DIGITAL.TXT" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -4,6 +4,7 @@
              xmlns:local="clr-namespace:SklepexPOL"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <FontFamily x:Key="DigitalBold">./fonts/DS-DIGIB.ttf</FontFamily>
+        <FontFamily x:Key="Digital">./fonts/DS-DIGI.ttf</FontFamily>
     </Application.Resources>
 </Application>

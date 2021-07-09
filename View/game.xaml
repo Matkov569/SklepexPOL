@@ -7,6 +7,70 @@
              xmlns:vm="clr-namespace:SklepexPOL.ViewModel"
              mc:Ignorable="d" 
              d:DesignHeight="720" d:DesignWidth="1280">
+    <UserControl.Resources>
+        <Style x:Key="btmMn" TargetType="Button">
+            <Setter Property="Margin" Value="10"/>
+            <Setter Property="FontSize" Value="30"/>
+            <Setter Property="FontFamily" Value="Verdana"/>
+            <Setter Property="Width" Value="300px"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template" >
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border CornerRadius="30" x:Name="button">
+                            <Border.Background>
+                                <SolidColorBrush Color="#FF2AA42A"></SolidColorBrush>
+                            </Border.Background>
+                            <ContentPresenter x:Name="contentPresenter" ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="button" Property="Background"  Value="#FFA2FF00"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="txtB" TargetType="TextBox">
+            <Setter Property="Margin" Value="10"/>
+            <Setter Property="FontSize" Value="40"/>
+            <Setter Property="FontFamily" Value="/SklepexPOL;component/fonts/#DS-Digital"/>
+            <Setter Property="Background" Value="Gray"/>
+            <Setter Property="BorderBrush">
+                <Setter.Value>
+                    <RadialGradientBrush>
+                        <GradientStop Color="#FF474747" Offset="1"/>
+                        <GradientStop Color="#FF8F8F8F" Offset="0.644"/>
+                    </RadialGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderThickness" Value="5"/>
+        </Style>
+        <Style x:Key="txtBl" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontFamily" Value="Verdana"/>
+            <Setter Property="Foreground" Value="Black"/>
+        </Style>
+        <Style x:Key="dateB" TargetType="TextBox">
+            <Setter Property="Margin" Value="10"/>
+            <Setter Property="FontSize" Value="42"/>
+            <Setter Property="FontFamily" Value="/SklepexPOL;component/fonts/#DS-Digital"/>
+            <Setter Property="Width" Value="auto"/>
+            <Setter Property="Background" Value="Gray"/>
+            <Setter Property="BorderBrush">
+                <Setter.Value>
+                    <RadialGradientBrush>
+                        <GradientStop Color="#FF474747" Offset="1"/>
+                        <GradientStop Color="#FF8F8F8F" Offset="0.644"/>
+                    </RadialGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderThickness" Value="5"/>
+        </Style>
+    </UserControl.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -18,13 +82,53 @@
             <RowDefinition Height="6*"></RowDefinition>
             <RowDefinition Height="1*"></RowDefinition>
         </Grid.RowDefinitions>
+
         <!--money panel-->
         <StackPanel Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Background="White">
-
+            <StackPanel Margin="10,0,10,0">
+                <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="0 10 0 0">
+                    <TextBox Style="{StaticResource txtB}" Foreground="White" 
+                             TextAlignment="Right" 
+                             IsHitTestVisible="False">200 $</TextBox>
+                    <TextBlock Style="{StaticResource txtBl}" HorizontalAlignment="Center">Saldo początkowe</TextBlock>
+                </StackPanel>
+                <StackPanel Orientation="Vertical"  VerticalAlignment="Center" Margin="0 10 0 0">
+                    <TextBox Style="{StaticResource txtB}" Foreground="Lime" 
+                             TextAlignment="Right" 
+                             IsHitTestVisible="False">200 $</TextBox>
+                    <TextBlock Style="{StaticResource txtBl}" HorizontalAlignment="Center">Dochód</TextBlock>
+                </StackPanel>
+                <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="0 10 0 0">
+                    <TextBox Style="{StaticResource txtB}" Foreground="Red" 
+                             TextAlignment="Right" 
+                             IsHitTestVisible="False">200 $</TextBox>
+                    <TextBlock Style="{StaticResource txtBl}" HorizontalAlignment="Center">Wydatki</TextBlock>
+                </StackPanel>
+                <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="0 10 0 0">
+                    <TextBox Style="{StaticResource txtB}" Foreground="Yellow" 
+                             TextAlignment="Right" 
+                             IsHitTestVisible="False">0 $</TextBox>
+                    <TextBlock Style="{StaticResource txtBl}" HorizontalAlignment="Center">Zysk</TextBlock>
+                </StackPanel>
+                <StackPanel Orientation="Vertical"  VerticalAlignment="Center" Margin="0 20 0 0">
+                    <TextBox Style="{StaticResource txtB}" Foreground="White" 
+                             TextAlignment="Right" 
+                             IsHitTestVisible="False">200 $</TextBox>
+                    <TextBlock Style="{StaticResource txtBl}" HorizontalAlignment="Center">Podsumowanie</TextBlock>
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+        <!--data panel-->
+        <StackPanel Orientation="Vertical" Grid.Row="2" Grid.Column="0">
+            <TextBox Style="{StaticResource dateB}" Foreground="#FF00FFC5" 
+                             TextAlignment="center"
+                             IsHitTestVisible="False">09/07/2021</TextBox>
+            
         </StackPanel>
         <!--bottom panel-->
-        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Background="AliceBlue">
-            <Button Command="{Binding WindowMenu}">Menu</Button>
+        <StackPanel Grid.Row="2" Grid.Column="1" Background="AliceBlue" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Style="{StaticResource btmMn}" Command="{Binding WindowMenu}">Powrót do menu</Button>
+            <Button Style="{StaticResource btmMn}" Command="{Binding WindowMenu}">Następny dzień</Button>
         </StackPanel>
         <!--top panel-->
         <StackPanel Grid.Row="0" Grid.Column="1" Background="Aqua">
