@@ -52,11 +52,23 @@
         <Style x:Key="txtBl" TargetType="TextBlock">
             <Setter Property="FontSize" Value="20"/>
             <Setter Property="FontFamily" Value="Verdana"/>
-            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="5"
+                                      Color="black"
+                                      Opacity="1"
+                                      Direction="-90"
+                                      ShadowDepth="2" 
+                                      RenderingBias="Quality"
+                                      />
+
+                </Setter.Value>
+            </Setter>
         </Style>
         <Style x:Key="dateB" TargetType="TextBox">
             <Setter Property="Margin" Value="10"/>
-            <Setter Property="FontSize" Value="42"/>
+            <Setter Property="FontSize" Value="60"/>
             <Setter Property="FontFamily" Value="/SklepexPOL;component/fonts/#DS-Digital"/>
             <Setter Property="Width" Value="auto"/>
             <Setter Property="Background" Value="Gray"/>
@@ -70,11 +82,48 @@
             </Setter>
             <Setter Property="BorderThickness" Value="5"/>
         </Style>
+        <Style TargetType="RadioButton" BasedOn="{StaticResource {x:Type ToggleButton}}">
+            <Setter Property="Margin" Value="5,0,5,0"/>
+            <Setter Property="FontSize" Value="30"/>
+            <Setter Property="FontFamily" Value="Times New Roman"/>
+            <Setter Property="Padding" Value="20,7,20,7"/>
+            <Setter Property="Height" Value="60"/>
+            <Setter Property="VerticalAlignment" Value="Bottom"/>
+            <Setter Property="Template" >
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border CornerRadius="10,10,0,0" x:Name="radiobutton">
+                            <Border.Background>
+                                <SolidColorBrush Color="#FFA6F382"/>
+                            </Border.Background>
+                            <ContentPresenter x:Name="contentPresenter" 
+                                              ContentTemplate="{TemplateBinding ContentTemplate}" 
+                                              Content="{TemplateBinding Content}" 
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                              Margin="{TemplateBinding Padding}" 
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked"  Value="True">
+                                <Setter TargetName="radiobutton" Property="Background" Value="#FFFFFBD5"/>
+                                <Setter Property="Height" Value="70"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Height" Value="70"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid>
+        
         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"></ColumnDefinition>
             <ColumnDefinition Width="1*"></ColumnDefinition>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
             <ColumnDefinition Width="3*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -82,15 +131,19 @@
             <RowDefinition Height="6*"></RowDefinition>
             <RowDefinition Height="1*"></RowDefinition>
         </Grid.RowDefinitions>
-
+        <Grid.Background>
+            <ImageBrush ImageSource="/images/dokumenty.jpg" Stretch="Fill"/>
+        </Grid.Background>
         <!--money panel-->
-        <StackPanel Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Background="White">
+        <StackPanel Grid.Row="0" Grid.Column="0" Grid.RowSpan="2">
             <StackPanel Margin="10,0,10,0">
                 <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="0 10 0 0">
                     <TextBox Style="{StaticResource txtB}" Foreground="White" 
                              TextAlignment="Right" 
                              IsHitTestVisible="False">200 $</TextBox>
-                    <TextBlock Style="{StaticResource txtBl}" HorizontalAlignment="Center">Saldo początkowe</TextBlock>
+                    <TextBlock Style="{StaticResource txtBl}" 
+                               HorizontalAlignment="Center">
+                        Saldo początkowe</TextBlock>
                 </StackPanel>
                 <StackPanel Orientation="Vertical"  VerticalAlignment="Center" Margin="0 10 0 0">
                     <TextBox Style="{StaticResource txtB}" Foreground="Lime" 
@@ -99,7 +152,7 @@
                     <TextBlock Style="{StaticResource txtBl}" HorizontalAlignment="Center">Dochód</TextBlock>
                 </StackPanel>
                 <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="0 10 0 0">
-                    <TextBox Style="{StaticResource txtB}" Foreground="Red" 
+                    <TextBox Style="{StaticResource txtB}" Foreground="#FFB40000" 
                              TextAlignment="Right" 
                              IsHitTestVisible="False">200 $</TextBox>
                     <TextBlock Style="{StaticResource txtBl}" HorizontalAlignment="Center">Wydatki</TextBlock>
@@ -118,25 +171,37 @@
                 </StackPanel>
             </StackPanel>
         </StackPanel>
-        <!--data panel-->
-        <StackPanel Orientation="Vertical" Grid.Row="2" Grid.Column="0">
+        <!--bottom panel-->
+        <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center">
             <TextBox Style="{StaticResource dateB}" Foreground="#FF00FFC5" 
                              TextAlignment="center"
-                             IsHitTestVisible="False">09/07/2021</TextBox>
-            
-        </StackPanel>
-        <!--bottom panel-->
-        <StackPanel Grid.Row="2" Grid.Column="1" Background="AliceBlue" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Style="{StaticResource btmMn}" Command="{Binding WindowMenu}">Powrót do menu</Button>
-            <Button Style="{StaticResource btmMn}" Command="{Binding WindowMenu}">Następny dzień</Button>
+                             IsHitTestVisible="False"
+                     Text="{Binding TodayDate, StringFormat=dd/MM/yyyy }"/>
+
+        </StackPanel> 
+        <StackPanel Orientation="Horizontal" Grid.Column="2" Grid.Row="2" HorizontalAlignment="Center">
+                <Button Style="{StaticResource btmMn}" Command="{Binding WindowMenu}">Powrót do menu</Button>
+            </StackPanel>
+        <StackPanel Orientation="Horizontal" Grid.Column="3" Grid.Row="2" HorizontalAlignment="Center">
+            <Button Style="{StaticResource btmMn}" Command="{Binding DateUp}">Następny dzień</Button>
         </StackPanel>
         <!--top panel-->
-        <StackPanel Grid.Row="0" Grid.Column="1" Background="Aqua">
-
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3"
+                    Height="70" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+            <RadioButton IsChecked="True" GroupName="tabs" 
+                         Command="{Binding ChangeTab}" CommandParameter="0">Dzienny raport</RadioButton>
+            <RadioButton GroupName="tabs" Command="{Binding ChangeTab}" 
+                         CommandParameter="1">Na stanie</RadioButton>
+            <RadioButton GroupName="tabs" Command="{Binding ChangeTab}" 
+                         CommandParameter="2">Zamówienia</RadioButton>
+            <RadioButton GroupName="tabs" Command="{Binding ChangeTab}"
+                         CommandParameter="3">Nowe zamówienie</RadioButton>
+            <RadioButton GroupName="tabs" Command="{Binding ChangeTab}" 
+                         CommandParameter="4">Sklep</RadioButton>
         </StackPanel>
         <!--iframe-->
-        <StackPanel Grid.Row="1" Grid.Column="1">
-
+        <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" HorizontalAlignment="Left">
+            <ContentControl x:Name="contentTabPanel" Height="540" Width="986" Content="{Binding ActualTab}"/>
         </StackPanel>
     </Grid>
 </UserControl>

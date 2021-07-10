@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,19 +14,22 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace SklepexPOL
+namespace SklepexPOL.View
 {
     /// <summary>
-    /// Logika interakcji dla klasy MainWindow.xaml
+    /// Logika interakcji dla klasy nowe.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class nowe : UserControl
     {
-        public MainWindow()
+        public nowe()
         {
             InitializeComponent();
-            this.menuContent.Content = new View.menu();
-            this.gameContent.Content = new View.game();
-            this.dateContent.Content = new View.data();
+        }
+        private void IntValidator(object sender, TextCompositionEventArgs e)
+        {   
+            Regex regex = new Regex("[^0-9]+");
+            e.Handled = regex.IsMatch(e.Text);
         }
     }
+    
 }

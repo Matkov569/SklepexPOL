@@ -58,11 +58,29 @@
     <Compile Include="ViewModel\BaseClass\BaseViewModel.cs" />
     <Compile Include="ViewModel\BaseClass\RelayCommand.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
+    <Compile Include="View\data.xaml.cs">
+      <DependentUpon>data.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\game.xaml.cs">
       <DependentUpon>game.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\menu.xaml.cs">
       <DependentUpon>menu.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\nowe.xaml.cs">
+      <DependentUpon>nowe.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\raport.xaml.cs">
+      <DependentUpon>raport.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\sklep.xaml.cs">
+      <DependentUpon>sklep.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\stan.xaml.cs">
+      <DependentUpon>stan.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\zamowienia.xaml.cs">
+      <DependentUpon>zamowienia.xaml</DependentUpon>
     </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -76,11 +94,35 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="View\data.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="View\game.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\menu.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\nowe.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\raport.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\sklep.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\stan.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\zamowienia.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -119,6 +161,15 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="fonts\DIGITAL.TXT" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images\backimg.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images\FileStack.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images\dokumenty.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,0 +1,21 @@
+﻿<UserControl x:Class="SklepexPOL.View.data"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:SklepexPOL.View"
+             xmlns:vm="clr-namespace:SklepexPOL.ViewModel"
+             mc:Ignorable="d" 
+             d:DesignHeight="720" d:DesignWidth="1280">
+    <Grid>
+        <Grid.Background>
+            <SolidColorBrush Color="#FF595959"/>
+        </Grid.Background>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock Text="{Binding TodayDate, StringFormat=dd/MM/yyyy}" 
+                       HorizontalAlignment="Center" VerticalAlignment="Center" 
+                       FontSize="100" Foreground="#FF00FFC5" 
+                       FontFamily="/SklepexPOL;component/fonts/#DS-Digital"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

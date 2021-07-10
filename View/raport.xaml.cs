@@ -13,19 +13,16 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace SklepexPOL
+namespace SklepexPOL.View
 {
     /// <summary>
-    /// Logika interakcji dla klasy MainWindow.xaml
+    /// Logika interakcji dla klasy raport.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class raport : UserControl
     {
-        public MainWindow()
+        public raport()
         {
             InitializeComponent();
-            this.menuContent.Content = new View.menu();
-            this.gameContent.Content = new View.game();
-            this.dateContent.Content = new View.data();
         }
     }
 }

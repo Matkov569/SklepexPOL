@@ -11,13 +11,11 @@ namespace SklepexPOL.ViewModel
     using SklepexPOL;
     using BaseClass;
     using System.Windows;
+    using System.Windows.Controls;
 
     class MainViewModel : BaseViewModel
     {
-        //składowa interfejsu 
-        //zdarzenie wywoływane w chwili zmiany własności o której chcemy powiadomić
-        //żeby zaktualizowany został widok
-
+        #region panel menu i gry
         //Widoczność menu/gry
         private Visibility menuVis = Visibility.Visible;
         public Visibility MenuVis
@@ -39,7 +37,18 @@ namespace SklepexPOL.ViewModel
                 onPropertyChanged(nameof(GameVis));
             }
         }
+        private Visibility dateVis = Visibility.Collapsed;
+        public Visibility DateVis
+        {
+            get { return dateVis; }
+            set
+            {
+                dateVis = value;
+                onPropertyChanged(nameof(DateVis));
+            }
+        }
         //komendy zmiany widoczności
+        //przejście do menu
         private ICommand windowMenu;
         public ICommand WindowMenu
         {
@@ -54,21 +63,24 @@ namespace SklepexPOL.ViewModel
             MenuVis = Visibility.Visible;
             GameVis = Visibility.Collapsed;
         }
-
+        //przejście do widoku gry
         private ICommand windowGame;
         public ICommand WindowGame
         {
             get
             {
-                return windowGame ?? new RelayCommand(prop => gameWindow(), null);
+                return windowGame ?? new RelayCommand(prop => gameWindowAsync(), null);
             }
         }
         
-        private void gameWindow()
+        private async Task gameWindowAsync()
         {
             MenuVis = Visibility.Collapsed;
-            GameVis = Visibility.Visible;
+            DateVis = Visibility.Visible;
+            await Task.Delay(3000);
+            dateGameSwitch();
         }
+
         //komendy otworzenia pliku z instrukcją
         private ICommand infoPdf;
         public ICommand InfoPdf
@@ -98,6 +110,117 @@ namespace SklepexPOL.ViewModel
         {
             System.Windows.Application.Current.Shutdown();
         }
+        #endregion
+        #region panel data
+        //zmienna daty - zaktualizować z bazą
+        private DateTime todayDate = DateTime.Today;
+        public DateTime TodayDate
+        {
+            get { return todayDate; }
+            set
+            {
+                todayDate = value;
+                onPropertyChanged(nameof(todayDate));
+            }
+        }
+        //zwiększenie daty o 1
+        private ICommand dateUp;
+        public ICommand DateUp
+        {
+            get
+            {
+                return dateUp ?? new RelayCommand(p => dayChangeAsync(), null);
+            }
+        }
+        private async Task dayChangeAsync()
+        {
+            gameDateSwitch();
+            TodayDate = TodayDate.AddDays(1);
+            await Task.Delay(3000);
+            dateGameSwitch();
+        }
+        //przejście z ekranu daty do ekranu gry
+        public void dateGameSwitch()
+        {
+            DateVis = Visibility.Collapsed;
+            GameVis = Visibility.Visible;
+        }
+        //przejście z ekranu daty do ekranu gry
+        public void gameDateSwitch()
+        {
+            DateVis = Visibility.Visible;
+            GameVis = Visibility.Collapsed;
+        }
+        #endregion
+        #region tabsy - zakładki w grze
+        private UserControl actualTab = new View.raport();
+        public UserControl ActualTab
+        {
+            get { return actualTab; }
+            set
+            {
+                actualTab = value;
+                onPropertyChanged(nameof(ActualTab));
+            }
+        }
 
+        private ICommand changeTab;
+        public ICommand ChangeTab
+        {
+            get
+            {
+                return changeTab ?? new RelayCommand(p => switchTab(p), null);
+            }
+        }
+        //zmiana tabsów
+        private void switchTab(object p)
+        {
+            int param = int.Parse(p.ToString());
+            switch (param)
+            {
+                case 0:
+                    ActualTab = new View.raport();
+                    break;
+                case 1:
+                    ActualTab = new View.stan();
+                    break;
+                case 2:
+                    ActualTab = new View.zamowienia();
+                    break;
+                case 3:
+                    ActualTab = new View.nowe();
+                    break;
+                case 4:
+                    ActualTab = new View.sklep();
+                    break;
+            }
+
+        }
+        #endregion
+        #region nowe zamówienie
+        //podatek produktu (wczytać z bazy)
+        private double proPod = 0.23;
+        public double ProPod
+        {
+            get { return proPod; }
+            set
+            {
+                proPod = value;
+                onPropertyChanged(nameof(ProPod));
+            }
+        }
+        #endregion
+        #region zamiana numerycznych procentów na stringi
+        //procent podatku produktu
+        private string proPodPer;
+        public string ProPodPer
+        {
+            get
+            {
+                proPodPer = (ProPod * 100).ToString() + " %";
+                return proPodPer;
+            }
+        }
+        #endregion
     }
 }
