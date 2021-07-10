@@ -12,6 +12,8 @@ namespace SklepexPOL.ViewModel
     using BaseClass;
     using System.Windows;
     using System.Windows.Controls;
+    using System.Media;
+    using System.Windows.Media;
 
     class MainViewModel : BaseViewModel
     {
@@ -134,8 +136,21 @@ namespace SklepexPOL.ViewModel
         }
         private async Task dayChangeAsync()
         {
-            gameDateSwitch();
             TodayDate = TodayDate.AddDays(1);
+            
+            MediaPlayer player = new MediaPlayer();
+            
+            if (TodayDate.Day == 13)
+                player.Open(new Uri(@"../../sounds/delivery.mp3", UriKind.Relative));
+            else
+            {
+                string[] sounds = { "cash.mp3","bell.mp3","beep.mp3"};
+                Random random = new Random();
+                int index = random.Next(0, sounds.Length);
+                player.Open(new Uri(@"../../sounds/"+sounds[index], UriKind.Relative));
+            }
+            player.Play();
+            gameDateSwitch();
             await Task.Delay(3000);
             dateGameSwitch();
         }
