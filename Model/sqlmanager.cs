@@ -14,21 +14,6 @@ namespace SklepexPOL.Model
         //sprawdzanie czy jest baza
         //sprawdzanie czy jest save
 
-        //ilość klientów
-        private int todayClientsValue;
-        public int TodayClientsValue
-        {
-            get { return todayClientsValue; }
-            set
-            {
-                todayClientsValue = value;
-                onPropertyChanged(nameof(TodayClientsValue));
-            }
-        }
-        //poziom sklepu
-        //stan sklepu
-        //liczba pracowników
-
-
+        
     }
 }

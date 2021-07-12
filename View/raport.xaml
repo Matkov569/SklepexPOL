@@ -26,6 +26,7 @@
             <StackPanel>
                 <TextBlock>Sprzedane towary:</TextBlock>
                 <TextBlock Text="{Binding TodaySellValue}"/>
+                <TextBlock Text="{Binding TodaySoldItems}"/>
             </StackPanel>
         </StackPanel>
         <StackPanel  Margin="11" Grid.Row="0" Grid.Column="1">

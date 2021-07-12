@@ -26,17 +26,29 @@ namespace SklepexPOL.Model
             var k = clientsCount + (stateDeppender(state) * marginDeppender(margin,level) * dayDeppender(date));
             return (int)k;
         }
-        //generator ilości kupionych produktów
+        //generator ilości kupionych produktów (zbędne)
         public int products(int clients, int level, int state, DateTime date)
         {
             Random random = new Random();
-            var p = clients * random.Next(6, 15) * (lvlDeppender(level) + stateDeppender(state) + dayDeppender(date));
+            var p = clients * random.Next(3, 11) * (lvlDeppender(level) + stateDeppender(state) + dayDeppender(date));
             return (int)p;
         }
 
 
         //generator kupionych przedmiotów - ile czego kupiono
-        //do zrobienia - powiązanie z bazą danych
+        public Dictionary<string, int[]> shopListGenerator(int customers, Dictionary<string, int[]> onHouseItems, int level, int state, DateTime date)
+        {
+            double wspolczynnik = lvlDeppender(level) * stateDeppender(state) * dayDeppender(date);
+            double trapez = trapezeFunction(0, 8, 8, 8, wspolczynnik);
+            Random random = new Random();
+            List<int> sizes = new List<int>();
+            foreach (KeyValuePair<string, int[]> item in onHouseItems)
+            {
+                int rand = (int)((random.NextDouble() * ((int)(item.Value[0]/customers) - trapez) + trapez)*customers);
+                item.Value[0] = rand;
+            }
+            return onHouseItems;
+        }
 
         //współczynnik marży sklepu
         private double marginDeppender(double margin, int level)
@@ -66,8 +78,8 @@ namespace SklepexPOL.Model
             if (level == 1) return 1;
             else if (level == 2) return 1.25;
             else if (level == 3) return 1.5;
-            else if (level == 4) return 2;
-            else if (level == 5) return 3;
+            else if (level == 4) return 1.75;
+            else if (level == 5) return 2;
             else return 0;
         }
         //współczynnik dnia tygodnia, wypłaty i świąt
