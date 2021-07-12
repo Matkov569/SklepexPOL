@@ -12,8 +12,8 @@ namespace SklepexPOL.ViewModel
     using BaseClass;
     using System.Windows;
     using System.Windows.Controls;
-    using System.Media;
     using System.Windows.Media;
+    using Model;
 
     class MainViewModel : BaseViewModel
     {
@@ -98,7 +98,8 @@ namespace SklepexPOL.ViewModel
             //utworzyć instrukcje i podpiąc jej plik
             System.Diagnostics.Process.Start("test.pdf");
         }
-
+        
+        //zamykanie programu
         private ICommand exitGame;
         public ICommand ExitGame
         {
@@ -113,6 +114,7 @@ namespace SklepexPOL.ViewModel
             System.Windows.Application.Current.Shutdown();
         }
         #endregion
+
         #region panel data
         //zmienna daty - zaktualizować z bazą
         private DateTime todayDate = DateTime.Today;
@@ -167,7 +169,9 @@ namespace SklepexPOL.ViewModel
             GameVis = Visibility.Collapsed;
         }
         #endregion
+
         #region tabsy - zakładki w grze
+        //zmienna aktualnie otwartej zakładki (domyślnie raport)
         private UserControl actualTab = new View.raport();
         public UserControl ActualTab
         {
@@ -212,6 +216,7 @@ namespace SklepexPOL.ViewModel
 
         }
         #endregion
+
         #region nowe zamówienie
         //podatek produktu (wczytać z bazy)
         private double proPod = 0.23;
