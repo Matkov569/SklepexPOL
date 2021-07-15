@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 
 namespace SklepexPOL.View
 {
+    using ViewModel;
     /// <summary>
     /// Logika interakcji dla klasy game.xaml
     /// </summary>

@@ -25,7 +25,6 @@
             </StackPanel>
             <StackPanel>
                 <TextBlock>Sprzedane towary:</TextBlock>
-                <TextBlock Text="{Binding TodaySellValue}"/>
                 <TextBlock Text="{Binding TodaySoldItems}"/>
             </StackPanel>
         </StackPanel>

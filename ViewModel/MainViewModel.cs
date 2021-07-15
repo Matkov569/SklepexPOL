@@ -14,9 +14,12 @@ namespace SklepexPOL.ViewModel
     using System.Windows.Controls;
     using System.Windows.Media;
     using Model;
-
+    using View;
     class MainViewModel : BaseViewModel
     {
+        //generator klientów i zakupów
+        clientRandomizer randomizer = new clientRandomizer();
+
         #region panel menu i gry
         //Widoczność menu/gry
         private Visibility menuVis = Visibility.Visible;
@@ -77,6 +80,13 @@ namespace SklepexPOL.ViewModel
         
         private async Task gameWindowAsync()
         {
+            double[] key = new double[] { 110, 5 };
+            Dictionary<string, double[]> slownik = new Dictionary<string, double[]>();
+            slownik.Add("pomidor", key);
+            slownik.Add("ogórek", key);
+            slownik.Add("Brokuł", key);
+            OnHouseItems = slownik;
+            TDN();
             MenuVis = Visibility.Collapsed;
             DateVis = Visibility.Visible;
             await Task.Delay(3000);
@@ -127,6 +137,43 @@ namespace SklepexPOL.ViewModel
                 onPropertyChanged(nameof(todayDate));
             }
         }
+        private string todayDateName;
+        public string TodayDateName
+        {
+            get{ return todayDateName; }
+            set
+            {
+                todayDateName = value;
+                onPropertyChanged(nameof(TodayDateName));
+            }
+        }
+        public void TDN()
+        {
+            switch ((int)TodayDate.DayOfWeek)
+            {
+                case 0:
+                    TodayDateName = "Niedziela";
+                    break;
+                case 1:
+                    TodayDateName = "Poniedziałek";
+                    break;
+                case 2:
+                    TodayDateName = "Wtorek";
+                    break;
+                case 3:
+                    TodayDateName = "Środa";
+                    break;
+                case 4:
+                    TodayDateName = "Czwartek";
+                    break;
+                case 5:
+                    TodayDateName = "Piątek";
+                    break;
+                case 6:
+                    TodayDateName = "Sobota";
+                    break;
+            }
+        }
         //zwiększenie daty o 1
         private ICommand dateUp;
         public ICommand DateUp
@@ -139,9 +186,10 @@ namespace SklepexPOL.ViewModel
         private async Task dayChangeAsync()
         {
             TodayDate = TodayDate.AddDays(1);
-            
+            TDN();
             MediaPlayer player = new MediaPlayer();
-            
+            //muzyczka
+            //zmienić na to że jak będzie dostawa to ma grać
             if (TodayDate.Day == 13)
                 player.Open(new Uri(@"../../sounds/delivery.mp3", UriKind.Relative));
             else
@@ -153,7 +201,10 @@ namespace SklepexPOL.ViewModel
             }
             player.Play();
             gameDateSwitch();
-            await Task.Delay(3000);
+            TodayClientsValue = randomizer.clientsCreator(TodayClientsValue, ShopMargin, ShopState, ShopLevel, TodayDate);
+            SoldItems = randomizer.shopListGenerator(TodayClientsValue, OnHouseItems, ShopLevel, ShopState, TodayDate);
+            TSI();
+            //await Task.Delay(3000);
             dateGameSwitch();
         }
         //przejście z ekranu daty do ekranu gry
@@ -162,7 +213,7 @@ namespace SklepexPOL.ViewModel
             DateVis = Visibility.Collapsed;
             GameVis = Visibility.Visible;
         }
-        //przejście z ekranu daty do ekranu gry
+        //przejście z ekranu gry do ekranu daty
         public void gameDateSwitch()
         {
             DateVis = Visibility.Visible;
@@ -230,6 +281,7 @@ namespace SklepexPOL.ViewModel
             }
         }
         #endregion
+        
         #region zamiana numerycznych procentów na stringi
         //procent podatku produktu
         private string proPodPer;
@@ -239,6 +291,110 @@ namespace SklepexPOL.ViewModel
             {
                 proPodPer = (ProPod * 100).ToString() + " %";
                 return proPodPer;
+            }
+        }
+        #endregion
+        
+        #region informacje o sklepie
+        //co jest na stanie 
+        //{"produkt":[ilosc, cena, wysokość podatku, marża dostawcy, termin ważności(ile dni zostało)]}
+        private Dictionary<string, double[]> onHouseItems;
+        public Dictionary<string, double[]> OnHouseItems
+        {
+            get { return onHouseItems; }
+            set
+            {
+                onHouseItems = value;
+                onPropertyChanged(nameof(OnHouseItems));
+            }
+        }
+
+        //ilość klientów
+        private int todayClientsValue = 100;
+        public int TodayClientsValue
+        {
+            get { return todayClientsValue; }
+            set
+            {
+                todayClientsValue = value;
+                onPropertyChanged(nameof(TodayClientsValue));
+            }
+        }
+        //wartość sprzedanych przedmiotów
+        private double todaySellValue;
+        public double TodaySellValue
+        {
+            get { return todaySellValue; }
+            set
+            {
+                todaySellValue = value;
+                onPropertyChanged(nameof(TodaySellValue));
+            }
+        }
+        //lista sprzedanych przedmiotów
+        private Dictionary<string, double[]> soldItems;
+        public Dictionary<string, double[]> SoldItems
+        {
+            get { return soldItems; }
+            set
+            {
+                soldItems = value;
+                onPropertyChanged(nameof(SoldItems));
+            }
+        }
+        //string sprzedanych przedmiotów
+        private string todaySoldItems;
+        public string TodaySoldItems
+        {
+            get { return todaySoldItems; }
+            set
+            {
+                todaySoldItems = value;
+                onPropertyChanged(nameof(TodaySoldItems));
+            }
+        }
+        private void TSI()
+        {
+            string t = "";
+            if (SoldItems != null)
+            {
+                foreach (KeyValuePair<string, double[]> key in SoldItems)
+                    t += key.Key + " : " + key.Value[0] + "\n";
+            }
+            TodaySoldItems = t;           
+        }
+        //poziom sklepu
+        private int shopLevel = 2;
+        public int ShopLevel
+        {
+            get { return shopLevel; }
+            set
+            {
+                shopLevel = value;
+                onPropertyChanged(nameof(ShopLevel));
+            }
+        }
+        //stan sklepu
+        private int shopState = 0;
+        public int ShopState
+        {
+            get { return shopState; }
+            set
+            {
+                shopState = value;
+                onPropertyChanged(nameof(ShopState));
+            }
+        }
+        //liczba pracowników
+        //marża sklepu
+        private double shopMargin = 0.65;
+        public double ShopMargin
+        {
+            get { return shopMargin; }
+            set
+            {
+                shopMargin = value;
+                onPropertyChanged(nameof(ShopMargin));
             }
         }
         #endregion

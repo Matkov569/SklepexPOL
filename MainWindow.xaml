@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:SklepexPOL"
         xmlns:vm="clr-namespace:SklepexPOL.ViewModel"
         mc:Ignorable="d"
-        Title="MainWindow" Height="720" Width="1280" ResizeMode="NoResize"
+        Title="SklepexPOL" Height="720" Width="1280" ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen" WindowStyle="None">
     <Window.DataContext>
         <vm:MainViewModel x:Name="vm"/>

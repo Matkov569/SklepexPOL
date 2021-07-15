@@ -12,6 +12,10 @@
             <SolidColorBrush Color="#FF595959"/>
         </Grid.Background>
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock Text="{Binding TodayDateName}" 
+                       HorizontalAlignment="Center" VerticalAlignment="Center" 
+                       FontSize="100" Foreground="#FF00FFC5" 
+                       FontFamily="/SklepexPOL;component/fonts/#DS-Digital"/>
             <TextBlock Text="{Binding TodayDate, StringFormat=dd/MM/yyyy}" 
                        HorizontalAlignment="Center" VerticalAlignment="Center" 
                        FontSize="100" Foreground="#FF00FFC5" 
