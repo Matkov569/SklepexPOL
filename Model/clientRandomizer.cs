@@ -14,7 +14,7 @@ namespace SklepexPOL.Model
     class clientRandomizer : BaseViewModel
     {
         //generator kupionych przedmiotów - ile czego kupiono
-        public Dictionary<string, double[]> shopListGenerator(int customers, Dictionary<string, double[]> onHouseItems, int level, int state, DateTime date)
+        public Dictionary<string, double[]> shopListGenerator(int customers, Dictionary<string, double[]> onHouseItems, int level, DateTime date)
         {
             Dictionary<string, double[]> dict = new Dictionary<string, double[]>();
             int sum;

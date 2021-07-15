@@ -202,9 +202,9 @@ namespace SklepexPOL.ViewModel
             player.Play();
             gameDateSwitch();
             TodayClientsValue = randomizer.clientsCreator(TodayClientsValue, ShopMargin, ShopState, ShopLevel, TodayDate);
-            SoldItems = randomizer.shopListGenerator(TodayClientsValue, OnHouseItems, ShopLevel, ShopState, TodayDate);
+            SoldItems = randomizer.shopListGenerator(TodayClientsValue, OnHouseItems, ShopLevel, TodayDate);
             TSI();
-            //await Task.Delay(3000);
+            await Task.Delay(3000);
             dateGameSwitch();
         }
         //przejście z ekranu daty do ekranu gry
@@ -296,7 +296,7 @@ namespace SklepexPOL.ViewModel
         #endregion
         
         #region informacje o sklepie
-        //co jest na stanie 
+        //co jest na stanie - wczytać z bazy
         //{"produkt":[ilosc, cena, wysokość podatku, marża dostawcy, termin ważności(ile dni zostało)]}
         private Dictionary<string, double[]> onHouseItems;
         public Dictionary<string, double[]> OnHouseItems
@@ -309,7 +309,7 @@ namespace SklepexPOL.ViewModel
             }
         }
 
-        //ilość klientów
+        //ilość klientów - wczytać z bazy
         private int todayClientsValue = 100;
         public int TodayClientsValue
         {

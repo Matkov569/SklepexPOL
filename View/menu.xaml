@@ -93,5 +93,20 @@
             <Button Command="{Binding InfoPdf}">Instrukcja obsługi</Button>
             <Button Command="{Binding ExitGame}">Wyjście</Button>
         </StackPanel>
+        <StackPanel Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="10">
+            <TextBlock Foreground="White" FontSize="30" FontWeight="Bold" HorizontalAlignment="Left">
+                <TextBlock.Effect>
+                    <DropShadowEffect Direction="0" ShadowDepth="0"/>
+                </TextBlock.Effect>
+                Lipiec 2021</TextBlock>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Grid.Column="0" VerticalAlignment="Bottom" HorizontalAlignment="Left">
+            <TextBlock Foreground="White" FontSize="30" FontWeight="Bold" HorizontalAlignment="Left" Margin="10">
+                <TextBlock.Effect>
+                    <DropShadowEffect Direction="0" ShadowDepth="0"/>
+                </TextBlock.Effect>
+                Łukasz Kopka<LineBreak/>
+                Mateusz Kowalski
+            </TextBlock> </StackPanel>
     </Grid>
 </UserControl>
