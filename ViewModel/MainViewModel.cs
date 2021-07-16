@@ -15,10 +15,27 @@ namespace SklepexPOL.ViewModel
     using System.Windows.Media;
     using Model;
     using View;
+    using R = Properties.Settings;
     class MainViewModel : BaseViewModel
     {
+        //DateTime timeStamp = R.Default.TodayDate;
+        //int RCCV = R.Default.ClientsCountValue;
+        
         //generator klientów i zakupów
         clientRandomizer randomizer = new clientRandomizer();
+        private ICommand goodBye;
+        public ICommand GoodBye
+        {
+            get
+            {
+                return goodBye ?? new RelayCommand(p => saveProperties(),null);
+            }
+        }
+        private void saveProperties()
+        {
+            R.Default.Save();
+        }
+
 
         #region panel menu i gry
         //Widoczność menu/gry
@@ -50,6 +67,16 @@ namespace SklepexPOL.ViewModel
             {
                 dateVis = value;
                 onPropertyChanged(nameof(DateVis));
+            }
+        }
+        private Visibility nGVis = Visibility.Collapsed;
+        public Visibility NGVis
+        {
+            get { return nGVis; }
+            set
+            {
+                dateVis = value;
+                onPropertyChanged(nameof(NGVis));
             }
         }
         //komendy zmiany widoczności
@@ -87,6 +114,7 @@ namespace SklepexPOL.ViewModel
             slownik.Add("Brokuł", key);
             OnHouseItems = slownik;
             TDN();
+            TodaySoldItems = R.Default.SoldItemsString;
             MenuVis = Visibility.Collapsed;
             DateVis = Visibility.Visible;
             await Task.Delay(3000);
@@ -147,6 +175,7 @@ namespace SklepexPOL.ViewModel
                 onPropertyChanged(nameof(TodayDateName));
             }
         }
+        //słowna reprezentacja dnia tygodnia
         public void TDN()
         {
             switch ((int)TodayDate.DayOfWeek)
@@ -183,6 +212,7 @@ namespace SklepexPOL.ViewModel
                 return dateUp ?? new RelayCommand(p => dayChangeAsync(), null);
             }
         }
+        //funkcja przechodzenia do następnego dnia
         private async Task dayChangeAsync()
         {
             TodayDate = TodayDate.AddDays(1);
@@ -203,7 +233,9 @@ namespace SklepexPOL.ViewModel
             gameDateSwitch();
             TodayClientsValue = randomizer.clientsCreator(TodayClientsValue, ShopMargin, ShopState, ShopLevel, TodayDate);
             SoldItems = randomizer.shopListGenerator(TodayClientsValue, OnHouseItems, ShopLevel, TodayDate);
-            TSI();
+            //TSI();
+            R.Default.SoldItemsString = TSI();
+            R.Default.Save();
             await Task.Delay(3000);
             dateGameSwitch();
         }
@@ -310,7 +342,7 @@ namespace SklepexPOL.ViewModel
         }
 
         //ilość klientów - wczytać z bazy
-        private int todayClientsValue = 100;
+        private int todayClientsValue = 10;
         public int TodayClientsValue
         {
             get { return todayClientsValue; }
@@ -353,7 +385,7 @@ namespace SklepexPOL.ViewModel
                 onPropertyChanged(nameof(TodaySoldItems));
             }
         }
-        private void TSI()
+        private string TSI()
         {
             string t = "";
             if (SoldItems != null)
@@ -361,10 +393,11 @@ namespace SklepexPOL.ViewModel
                 foreach (KeyValuePair<string, double[]> key in SoldItems)
                     t += key.Key + " : " + key.Value[0] + "\n";
             }
-            TodaySoldItems = t;           
+            TodaySoldItems = t; 
+            return t;          
         }
         //poziom sklepu
-        private int shopLevel = 2;
+        private int shopLevel = 1;
         public int ShopLevel
         {
             get { return shopLevel; }
@@ -375,7 +408,7 @@ namespace SklepexPOL.ViewModel
             }
         }
         //stan sklepu
-        private int shopState = 0;
+        private int shopState = 2;
         public int ShopState
         {
             get { return shopState; }
@@ -395,6 +428,47 @@ namespace SklepexPOL.ViewModel
             {
                 shopMargin = value;
                 onPropertyChanged(nameof(ShopMargin));
+            }
+        }
+        #endregion
+
+        #region nowa gra
+        private ICommand cancelNG;
+        public ICommand CancelNG
+        {
+            get
+            {
+                return cancelNG ?? new RelayCommand(p=>NGCancel(),null);
+            }
+        }
+        private void NGCancel()
+        {
+
+        }
+
+        private ICommand nG;
+        public ICommand NG
+        {
+            get
+            {
+                return nG ?? new RelayCommand(p => NowaGra(), arg => ShopNameInpt != null && ShopNameInpt != "");
+            }
+        }
+        private void NowaGra()
+        {
+            Console.WriteLine(ShopNameInpt);
+        }
+        private string shopNameInpt;
+        public string ShopNameInpt
+        {
+            get
+            {
+                return shopNameInpt;
+            }
+            set
+            {
+                shopNameInpt = value;
+                onPropertyChanged(nameof(ShopNameInpt));
             }
         }
         #endregion

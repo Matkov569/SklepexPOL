@@ -31,7 +31,7 @@ namespace SklepexPOL.Model
                 item.Value[0] = 0;
             }
             double wsp = lvlDeppender(level) * dayDeppender(date) / (dict.Count-(dict.Count>1?1:0));
-            Console.WriteLine(wsp);
+            //Console.WriteLine(wsp);
             for (int i = 0; i < customers; i++)
             {
                 sum = 0;
@@ -86,16 +86,20 @@ namespace SklepexPOL.Model
             }
         }
         //współczynnik stanu sklepu
-        private double stateDeppender(int state)
+        private double stateDeppender(int state, int level, int clients)
         {
             //zły stan
             if (state == 0) return 0.9999;
             //średni
-            if (state == 1) return 1;
+            else if (state == 1) return 1;
             //dobry
-            if (state == 2) return 1.01;
+            else if (state == 2)
+            {
+                if (level == 1 && clients < 20) return 1.045;
+                else return 1.02; 
+            }
             //świetny
-            else return 1.02;
+            else return 1.03;
         }
         //współczynnik poziomu sklepu
         private double lvlDeppender(int level)
@@ -223,7 +227,7 @@ namespace SklepexPOL.Model
             double[] wsp = dayDep(date);
             //Console.WriteLine(wsp[0]+" "+wsp[1]+" "+wsp[2]);
             int clientel = clients - holidayCustomers - weekCustomers - paydayCustomers;
-            k = k * stateDeppender(state) * marginDeppender(margin, level);
+            k = k * stateDeppender(state, level, clientel) * marginDeppender(margin, level);
             int holi = (int)(clientel * wsp[1])/3;
             int week = (int)(clientel * wsp[2])/3;
             int payd = (int)(clientel * wsp[0])/3;

@@ -13,7 +13,7 @@ namespace SklepexPOL.Properties {
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.8.1.0")]
-    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
+    public sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
         
@@ -26,12 +26,35 @@ namespace SklepexPOL.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string Ustawienie {
+        public string SoldItemsString {
             get {
-                return ((string)(this["Ustawienie"]));
+                return ((string)(this["SoldItemsString"]));
             }
             set {
-                this["Ustawienie"] = value;
+                this["SoldItemsString"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.DateTime TodayDate {
+            get {
+                return ((global::System.DateTime)(this["TodayDate"]));
+            }
+            set {
+                this["TodayDate"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int ClientsCountValue {
+            get {
+                return ((int)(this["ClientsCountValue"]));
+            }
+            set {
+                this["ClientsCountValue"] = value;
             }
         }
     }

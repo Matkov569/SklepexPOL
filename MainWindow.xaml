@@ -7,7 +7,9 @@
         xmlns:vm="clr-namespace:SklepexPOL.ViewModel"
         mc:Ignorable="d"
         Title="SklepexPOL" Height="720" Width="1280" ResizeMode="NoResize"
-        WindowStartupLocation="CenterScreen" WindowStyle="None">
+        WindowStartupLocation="CenterScreen" WindowStyle="None"
+        Closing="Window_Closing">
+
     <Window.DataContext>
         <vm:MainViewModel x:Name="vm"/>
     </Window.DataContext>
@@ -15,5 +17,6 @@
         <ContentControl x:Name="menuContent" Visibility="{Binding Path=MenuVis}"/>
         <ContentControl x:Name="gameContent" Visibility="{Binding Path=GameVis}"/>
         <ContentControl x:Name="dateContent" Visibility="{Binding Path=DateVis}"/>
+        <ContentControl x:Name="NGContent" Visibility="{Binding Path=NGVis}"/>
     </Grid>
 </Window>

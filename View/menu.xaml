@@ -88,8 +88,9 @@
                 </TextBlock.Effect>POL</TextBlock>
         </StackPanel>
         <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
-            <Button IsEnabled="False">Kontynuuj</Button>
-            <Button Command="{Binding WindowGame}">Nowa gra</Button>
+            <!--zrobić binding i komende -->
+            <Button IsEnabled="{Binding IsSavedGame}" Command="{Binding WindowGame}">Kontynuuj</Button>
+            <Button Command="{Binding NewGameView}">Nowa gra</Button>
             <Button Command="{Binding InfoPdf}">Instrukcja obsługi</Button>
             <Button Command="{Binding ExitGame}">Wyjście</Button>
         </StackPanel>

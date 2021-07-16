@@ -15,6 +15,8 @@ using System.Windows.Shapes;
 
 namespace SklepexPOL
 {
+    using ViewModel.BaseClass;
+    using ViewModel;
     /// <summary>
     /// Logika interakcji dla klasy MainWindow.xaml
     /// </summary>
@@ -26,6 +28,13 @@ namespace SklepexPOL
             this.menuContent.Content = new View.menu();
             this.gameContent.Content = new View.game();
             this.dateContent.Content = new View.data();
+            this.NGContent.Content = new View.newgame();
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            //MainViewModel vm = this.DataContext as MainViewModel;
+            //vm.GoodBye.Execute(null);
         }
     }
 }
