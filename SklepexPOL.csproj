@@ -200,9 +200,7 @@
     <Resource Include="images\dokumenty.jpg" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="database\dane.sql" />
-    <Content Include="database\struktura i dane.sql" />
-    <Content Include="database\struktura.sql" />
+    <Content Include="database\baza.sql" />
     <Content Include="sounds\delivery.mp3" />
     <Content Include="sounds\beep.mp3" />
     <Content Include="sounds\cash.mp3" />
