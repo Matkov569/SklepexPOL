@@ -29,6 +29,7 @@ namespace SklepexPOL
             this.gameContent.Content = new View.game();
             this.dateContent.Content = new View.data();
             this.NGContent.Content = new View.newgame();
+            this.GOContent.Content = new View.gameover();
             MainViewModel vm = this.DataContext as MainViewModel;
             vm.Hello.Execute(null);
         }

@@ -20,9 +20,14 @@ namespace SklepexPOL.ViewModel
     {
         //generator klientów i zakupów
         clientRandomizer randomizer = new clientRandomizer();
+        //kalkulator
         moneyCounter moneyManager = new moneyCounter();
+        //konwertor na stringi
         stringConventer strConv = new stringConventer();
+        //messageboxy
         interactions intercom = new interactions();
+        //ustalanie info o sklepie ?
+        //shopInfo informator = new shopInfo();
 
         //uruchamianie sie aplikacji
         private ICommand hello;
@@ -96,6 +101,7 @@ namespace SklepexPOL.ViewModel
 
 
         #region panel menu i gry
+
         //czy jest połączenie z sql
         private bool isSQL;
         public bool IsSQL
@@ -107,6 +113,7 @@ namespace SklepexPOL.ViewModel
                 onPropertyChanged(nameof(IsSQL));
             }
         }
+
         //czy jest zapisana gra
         private bool isSavedGame;
         public bool IsSavedGame
@@ -160,6 +167,17 @@ namespace SklepexPOL.ViewModel
                 onPropertyChanged(nameof(NGVis));
             }
         }
+        private Visibility gOVis = Visibility.Collapsed;
+        public Visibility GOVis
+        {
+            get { return gOVis; }
+            set
+            {
+                gOVis = value;
+                onPropertyChanged(nameof(GOVis));
+            }
+        }
+
         //komendy zmiany widoczności
         //przejście do menu
         private ICommand windowMenu;
@@ -183,8 +201,7 @@ namespace SklepexPOL.ViewModel
             {
                 return windowGame ?? new RelayCommand(prop => gameWindowAsync(), null);
             }
-        }
-        
+        } 
         private async Task gameWindowAsync()
         {
             //inicjacja spisu produktów na stanie itd. - z bazy
@@ -216,7 +233,6 @@ namespace SklepexPOL.ViewModel
                 return infoPdf ?? new RelayCommand(prop => showInfo(), null);
             }
         }
-
         private void showInfo()
         {
             //utworzyć instrukcje i podpiąc jej plik
@@ -232,14 +248,26 @@ namespace SklepexPOL.ViewModel
                 return exitGame ?? new RelayCommand(prop => byeBye(), null);
             }
         }
-
         private void byeBye()
         {
             System.Windows.Application.Current.Shutdown();
         }
+
+        //tekst alertu w raporcie
+        private string alertText;
+        public string AlertText
+        {
+            get { return alertText; }
+            set
+            {
+                alertText = value;
+                onPropertyChanged(nameof(AlertText));
+            }
+        }
         #endregion
 
         #region panel data
+
         //zmienna daty - zaktualizować z bazą
         private DateTime todayDate = DateTime.Today;
         public DateTime TodayDate
@@ -261,6 +289,7 @@ namespace SklepexPOL.ViewModel
                 onPropertyChanged(nameof(TodayDateName));
             }
         }
+
         //słowna reprezentacja dnia tygodnia
         public void TDN()
         {
@@ -289,6 +318,7 @@ namespace SklepexPOL.ViewModel
                     break;
             }
         }
+
         //zwiększenie daty o 1
         private ICommand dateUp;
         public ICommand DateUp
@@ -298,6 +328,7 @@ namespace SklepexPOL.ViewModel
                 return dateUp ?? new RelayCommand(p => dayChangeAsync(), null);
             }
         }
+
         //funkcja przechodzenia do następnego dnia
         private async Task dayChangeAsync()
         {
@@ -305,13 +336,23 @@ namespace SklepexPOL.ViewModel
             TodayDate = TodayDate.AddDays(1);
             //mysql => NextDay()
             //mysql Update info set Ruch = TodayClientsValue
+            
+            //zmiany w pieniądzach
+            MoneyBalance = MoneyBalance + MoneyIncome - MoneyExpense;
+            
+            //sprawdzenie czy jest dzisiaj dostawa
+            //IsDeliveryDay
+
             //słowny zapis dnia
             TDN();
-            MediaPlayer player = new MediaPlayer();
+            
             //muzyczka
             //zmienić na to że jak będzie dostawa to ma grać
-            if (TodayDate.Day == 13)
+            MediaPlayer player = new MediaPlayer();
+            if (IsDeliveryDay)
                 player.Open(new Uri(@"../../sounds/delivery.mp3", UriKind.Relative));
+            else if(MoneyBalance<=-5000)
+                player.Open(new Uri(@"../../sounds/trombone.mp3", UriKind.Relative));
             else
             {
                 string[] sounds = { "cash.mp3","bell.mp3","beep.mp3"};
@@ -320,24 +361,81 @@ namespace SklepexPOL.ViewModel
                 player.Open(new Uri(@"../../sounds/"+sounds[index], UriKind.Relative));
             }
             player.Play();
+            
             //przejście z widoku gry na widok daty
             gameDateSwitch();
+            
             //generowanie klientów i ich zakupów
             TodayClientsValue = randomizer.clientsCreator(TodayClientsValue, ShopMargin, ShopState, ShopLevel, TodayDate);
             SoldItems = randomizer.shopListGenerator(TodayClientsValue, OnHouseItems, ShopLevel, TodayDate);
+            R.Default.ClientsCountValue = TodayClientsValue;
             R.Default.SoldItemsString = TSI();
             R.Default.Save();
+
+            //obliczenie dochodów ze sprzedaży
+            MoneyIncome = moneyManager.stonksCalc(SoldItems, ShopMargin);
+            //mysql => update info set Dochod_dzienny = MoneyIncome
+
+            //obliczenie wydatków
+            if (TodayDate.Day == 1)
+            {
+                IsPaymentDay = true;
+                MoneyExpense = EmployeesSalary * ShopEmployees + RentValue;
+            }
+            else
+            {
+                IsPaymentDay = false;
+                MoneyExpense = EmployeesSalary * ShopEmployees;
+            }
+            //mysql => update info set Wydatki_dzienne = MoneyExpense
+
+            //sprawdzenie stanu, rodzaju i poziomu sklepu
+            shopInfoUpdate();
+
+            //info o funduszach
+            if (MoneyBalance < -1000)
+            {
+                IsAlert = true;
+                AlertText = "Twój sklep przynosi straty. Jeśli jego sytuacja nie poprawi się, zostanie on zamknięty.";
+            }
+            else 
+            {
+                IsAlert = false;
+            }
+            //info czy można levelować
+            if (IsLvlUp && MoneyBalance > 0) 
+            {
+                IsAlert = true;
+                AlertText = "Istnieje możliwość zwiększenia poziomu sklepu.";
+            }
+            else
+            {
+                IsAlert = false;
+            }
+
             //chwila odpoczynku
             await Task.Delay(3000);
+            
             //przejście z daty do gry
-            dateGameSwitch();
+            
+            if (MoneyBalance <= -5000)
+            {
+                intercom.message("Komornik przesyła pozdrowienia.\nTu kończy się historia twojego sklepu.\n" +
+                    "R. I. P. " + ShopName + "\n" + OpenDate.ToString("dd/MM/yyyy") + " - " + TodayDate.ToString("dd/MM/yyyy"), "R. I. P.");
+                GameOver();
+            }
+            else { 
+                dateGameSwitch();
+            }
         }
+
         //przejście z ekranu daty do ekranu gry
         public void dateGameSwitch()
         {
             DateVis = Visibility.Collapsed;
             GameVis = Visibility.Visible;
         }
+
         //przejście z ekranu gry do ekranu daty
         public void gameDateSwitch()
         {
@@ -347,6 +445,7 @@ namespace SklepexPOL.ViewModel
         #endregion
 
         #region tabsy - zakładki w grze
+
         //zmienna aktualnie otwartej zakładki (domyślnie raport)
         private UserControl actualTab = new View.raport();
         public UserControl ActualTab
@@ -359,6 +458,7 @@ namespace SklepexPOL.ViewModel
             }
         }
 
+        //zmiana tabsów
         private ICommand changeTab;
         public ICommand ChangeTab
         {
@@ -367,7 +467,6 @@ namespace SklepexPOL.ViewModel
                 return changeTab ?? new RelayCommand(p => switchTab(p), null);
             }
         }
-        //zmiana tabsów
         private void switchTab(object p)
         {
             int param = int.Parse(p.ToString());
@@ -394,8 +493,9 @@ namespace SklepexPOL.ViewModel
         #endregion
 
         #region nowe zamówienie
+
         //podatek produktu (wczytać z bazy)
-        private double proPod = 0.23;
+        private double proPod;
         public double ProPod
         {
             get { return proPod; }
@@ -403,20 +503,13 @@ namespace SklepexPOL.ViewModel
             {
                 proPod = value;
                 onPropertyChanged(nameof(ProPod));
+                onPropertyChanged(nameof(ProPodPer));
             }
         }
-        #endregion
-        
-        #region zamiana numerycznych procentów na stringi
         //procent podatku produktu
-        private string proPodPer;
         public string ProPodPer
         {
-            get
-            {
-                proPodPer = (ProPod * 100).ToString() + " %";
-                return proPodPer;
-            }
+            get { return strConv.percentage(ProPod); }
         }
         #endregion
 
@@ -433,6 +526,7 @@ namespace SklepexPOL.ViewModel
                 onPropertyChanged(nameof(ShopName));
             }
         }
+
         //data otwarcia
         private DateTime openDate;
         public DateTime OpenDate
@@ -442,6 +536,7 @@ namespace SklepexPOL.ViewModel
             {
                 openDate = value;
                 onPropertyChanged(nameof(OpenDate));
+                onPropertyChanged(nameof(OpenDateString));
             }
         }
         //data otwarcia jako string
@@ -451,8 +546,9 @@ namespace SklepexPOL.ViewModel
         }
         private string ODS()
         {
-            return OpenDate.ToString("dd/MM/yyyy") +" ("+(TodayDate - OpenDate).TotalDays.ToString()+"dni)";
+            return OpenDate.ToString("dd/MM/yyyy") +" ("+(TodayDate - OpenDate).TotalDays.ToString()+" dni)";
         }
+
         //co jest na stanie - wczytać z bazy
         //{"produkt #id_zam":[ilosc, cena, wysokość podatku, marża dostawcy, termin ważności(ile dni zostało), id_zam]}
         private Dictionary<string, double[]> onHouseItems;
@@ -475,12 +571,14 @@ namespace SklepexPOL.ViewModel
             {
                 moneyBalance = Math.Round(value, 2);
                 onPropertyChanged(nameof(MoneyBalance));
+                onPropertyChanged(nameof(MoneyBalanceString));
             }
         }
         public string MoneyBalanceString
         {
             get { return strConv.money(MoneyBalance); }
         }
+
         //dochód
         private double moneyIncome;
         public double MoneyIncome
@@ -490,12 +588,14 @@ namespace SklepexPOL.ViewModel
             {
                 moneyIncome = Math.Round(value, 2);
                 onPropertyChanged(nameof(MoneyIncome));
+                onPropertyChanged(nameof(MoneyIncomeString));
             }
         }
         public string MoneyIncomeString
         {
             get { return strConv.money(MoneyIncome); }
         }
+
         //wydatki
         private double moneyExpense;
         public double MoneyExpense
@@ -505,17 +605,22 @@ namespace SklepexPOL.ViewModel
             {
                 moneyExpense = Math.Round(value, 2);
                 onPropertyChanged(nameof(MoneyExpense));
+                onPropertyChanged(nameof(MoneyExpenseString));
+                onPropertyChanged(nameof(MoneyProfit));
+                onPropertyChanged(nameof(MoneySummary));
             }
         }
         public string MoneyExpenseString
         {
             get { return strConv.money(MoneyExpense); }
         }
+
         //zysk
         public string MoneyProfit
         {
             get { return strConv.money(MoneyIncome - MoneyExpense); }
         }
+
         //podsumowanie
         public string MoneySummary
         {
@@ -533,17 +638,7 @@ namespace SklepexPOL.ViewModel
                 onPropertyChanged(nameof(TodayClientsValue));
             }
         }
-        //wartość sprzedanych przedmiotów
-        private double todaySellValue;
-        public double TodaySellValue
-        {
-            get { return todaySellValue; }
-            set
-            {
-                todaySellValue = value;
-                onPropertyChanged(nameof(TodaySellValue));
-            }
-        }
+
         //lista sprzedanych przedmiotów
         private Dictionary<string, double[]> soldItems;
         public Dictionary<string, double[]> SoldItems
@@ -555,6 +650,7 @@ namespace SklepexPOL.ViewModel
                 onPropertyChanged(nameof(SoldItems));
             }
         }
+
         //string sprzedanych przedmiotów
         private string todaySoldItems;
         public string TodaySoldItems
@@ -566,6 +662,7 @@ namespace SklepexPOL.ViewModel
                 onPropertyChanged(nameof(TodaySoldItems));
             }
         }
+
         //tworzenie listy sprzedanych przedmiotów
         private string TSI()
         {
@@ -578,6 +675,7 @@ namespace SklepexPOL.ViewModel
             TodaySoldItems = t; 
             return t;          
         }
+
         //poziom sklepu
         private int shopLevel = 1;
         public int ShopLevel
@@ -587,6 +685,7 @@ namespace SklepexPOL.ViewModel
             {
                 shopLevel = value;
                 onPropertyChanged(nameof(ShopLevel));
+                onPropertyChanged(nameof(ShopLevelStr));
             }
         }
         //poziom sklepu jako string
@@ -613,6 +712,7 @@ namespace SklepexPOL.ViewModel
             {
                 shopState = value;
                 onPropertyChanged(nameof(ShopState));
+                onPropertyChanged(nameof(ShopStateStr));
             }
         }
         //stan sklepu jako string
@@ -639,6 +739,7 @@ namespace SklepexPOL.ViewModel
                 onPropertyChanged(nameof(ShopEmployees));
             }
         }
+
         //wynagrodzenie pracowników
         private double employeesSalary;
         public double EmployeesSalary
@@ -648,6 +749,8 @@ namespace SklepexPOL.ViewModel
             {
                 employeesSalary = value;
                 onPropertyChanged(nameof(EmployeesSalary));
+                onPropertyChanged(nameof(EmployeeString));
+                onPropertyChanged(nameof(SalaryString));
             }
         }
         public string EmployeeString
@@ -658,8 +761,9 @@ namespace SklepexPOL.ViewModel
         {
             get { return strConv.money(EmployeesSalary * ShopEmployees); }
         }
+
         //marża sklepu
-        private double shopMargin = 0.65;
+        private double shopMargin;
         public double ShopMargin
         {
             get { return shopMargin; }
@@ -667,6 +771,7 @@ namespace SklepexPOL.ViewModel
             {
                 shopMargin = value;
                 onPropertyChanged(nameof(ShopMargin));
+                onPropertyChanged(nameof(MarginString));
             }
         }
         //marża jako string
@@ -674,6 +779,7 @@ namespace SklepexPOL.ViewModel
         {
             get { return strConv.percentage(ShopMargin); }
         }
+
         //rodzaj sklepu
         private int shopType = 10;
         public int ShopType
@@ -683,6 +789,7 @@ namespace SklepexPOL.ViewModel
             {
                 shopType = value;
                 onPropertyChanged(nameof(ShopType));
+                onPropertyChanged(nameof(ShopTypeString));
             }
         }
         //rodzaj sklepu jako string
@@ -704,6 +811,7 @@ namespace SklepexPOL.ViewModel
             else if (ShopType == 11) return "Monopolowy";
             else return "Market";
         }
+
         //pojemność magazynu
         private int storageSize;
         public int StorageSize
@@ -713,6 +821,7 @@ namespace SklepexPOL.ViewModel
             {
                 storageSize = value;
                 onPropertyChanged(nameof(StorageSize));
+                onPropertyChanged(nameof(StorageSpace));
             }
         }
         //ilość produktów w magazynie
@@ -724,6 +833,7 @@ namespace SklepexPOL.ViewModel
             {
                 storageValue = value;
                 onPropertyChanged(nameof(StorageValue));
+                onPropertyChanged(nameof(StorageSpace));
             }
         }
         //string zapełnienia magazynu
@@ -731,6 +841,7 @@ namespace SklepexPOL.ViewModel
         {
             get { return StorageValue.ToString() + "/" + StorageSize.ToString(); }
         }
+
         //wysokość opłat miesięcznych
         private double rentValue;
         public double RentValue
@@ -740,6 +851,7 @@ namespace SklepexPOL.ViewModel
             {
                 rentValue = value;
                 onPropertyChanged(nameof(RentValue));
+                onPropertyChanged(nameof(RentValueString));
             }
         }
         public string RentValueString
@@ -759,6 +871,44 @@ namespace SklepexPOL.ViewModel
             }
         }
 
+        //czy dzisiaj jest dostawa
+        private bool isDeliveryDay;
+        public bool IsDeliveryDay
+        {
+            get { return isDeliveryDay; }
+            set
+            {
+                isDeliveryDay = value;
+                onPropertyChanged(nameof(IsDeliveryDay));
+            }
+        }
+
+        //czy dzisiaj jest pierwszy
+        private bool isPaymentDay;
+        public bool IsPaymentDay
+        {
+            get { return isPaymentDay; }
+            set
+            {
+                isPaymentDay = value;
+                onPropertyChanged(nameof(IsPaymentDay));
+            }
+        }
+
+        //czy ma wyświetlać panel informacji
+        private bool isAlert;
+        public bool IsAlert
+        {
+            get { return isAlert; }
+            set
+            {
+                isAlert = value;
+                onPropertyChanged(nameof(IsAlert));
+            }
+        }
+
+        //komendy
+
         //zmiana marży
         private ICommand marginChange;
         public ICommand MarginChange
@@ -772,6 +922,8 @@ namespace SklepexPOL.ViewModel
                 }, null);
             }
         }
+
+        //zmiana marży - pokazanie slidera
         private ICommand marginEnabler;
         public ICommand MarginEnabler
         {
@@ -807,18 +959,13 @@ namespace SklepexPOL.ViewModel
             }
         }
 
+        //Aktualizacja informacji o sklepie (stan, poziom, rodzaj)
         public void shopInfoUpdate()
         {
             //określenie rodzaju, stanu i poziomu
         }
-        private ICommand infoBox;
-        public ICommand InfoBox
-        {
-            get
-            {
-                return infoBox ?? new RelayCommand(p => intercom.infoBox((string)p), null);
-            }
-        }
+
+        //czy można levelować
         private bool isLvlUp = false;
         public bool IsLvlUp
         {
@@ -829,6 +976,8 @@ namespace SklepexPOL.ViewModel
                 onPropertyChanged(nameof(IsLvlUp));
             }
         }
+
+        //levelowanie
         private ICommand levelUp;
         public ICommand LevelUp 
         {
@@ -843,9 +992,22 @@ namespace SklepexPOL.ViewModel
                 }, null);
             }
         }
+
+        //wyświetlenie infoboxa z informacjami
+        private ICommand infoBox;
+        public ICommand InfoBox
+        {
+            get
+            {
+                return infoBox ?? new RelayCommand(p => intercom.infoBox((string)p), null);
+            }
+        }
+
         #endregion
 
         #region nowa gra
+
+        //pokazanie ekranu tworzenia nowej gry
         private ICommand newGameView;
         public ICommand NewGameView
         {
@@ -860,6 +1022,7 @@ namespace SklepexPOL.ViewModel
             MenuVis = Visibility.Collapsed;    
         }
 
+        //powrót do menu
         private ICommand cancelNG;
         public ICommand CancelNG
         {
@@ -874,6 +1037,7 @@ namespace SklepexPOL.ViewModel
            NGVis = Visibility.Collapsed;
         }
 
+        //tworzenie nowej gry
         private ICommand nG;
         public ICommand NG
         {
@@ -965,6 +1129,8 @@ namespace SklepexPOL.ViewModel
 
             }
         }
+
+        //nowa nazwa sklepu
         private string shopNameInpt;
         public string ShopNameInpt
         {
@@ -978,7 +1144,8 @@ namespace SklepexPOL.ViewModel
                 onPropertyChanged(nameof(ShopNameInpt));
             }
         }
-
+        
+        //indeks (rodzaj) sklepu
         private int selectedShopType = 0;
         public int SelectedShopType
         {
@@ -993,6 +1160,7 @@ namespace SklepexPOL.ViewModel
 
         #region zamknięcie sklepu/przegrana
 
+        //przycisk zamknij sklep
         private ICommand sepuku;
         public ICommand Sepuku
         {
@@ -1006,7 +1174,103 @@ namespace SklepexPOL.ViewModel
             if(intercom.YesOrNo("Czy na pewno chcesz zamknąć swój sklep?\nTego działania nie można odwrócić!","Czy chcesz zamknąć sklep?"))
             {
                 Console.WriteLine("zamykamy");
-                //sql ;
+                MediaPlayer player = new MediaPlayer();
+                player.Open(new Uri(@"../../sounds/funeral.mp3", UriKind.Relative));
+                player.Play();
+                ByeScreen();
+            }
+        }
+
+        private void GameOver()
+        {
+            ByeScreen();
+        }
+
+        private void ByeScreen()
+        {
+            //mysql pobierz dane końcowe
+            //ustaw zmienne danych końcowych
+            //select  * from info;
+
+            GOVis = Visibility.Visible;
+            DateVis = Visibility.Collapsed;
+            GameVis = Visibility.Collapsed;
+
+            //czyszczenie bazy danych
+            //mysql => the blip
+
+            IsSavedGame = false;
+            R.Default.IsGameSaved = false;
+            R.Default.SoldItemsString = "";
+            R.Default.ClientsCountValue = 0;
+            R.Default.TodayDate = DateTime.Now;
+            R.Default.Save();
+
+        }
+
+        //powrót do menu
+        private ICommand gOmenu;
+        public ICommand GOmenu
+        {
+            get
+            {
+                return gOmenu ?? new RelayCommand(p =>
+                {
+                    GOVis = Visibility.Collapsed;
+                    MenuVis = Visibility.Visible;
+                }, null);
+            }
+        }
+
+        //zmienne do podsumowania game over
+        private double totalIncome;
+        public string TotalIncome
+        {
+            get { return strConv.money(totalIncome); }
+            set
+            {
+                totalIncome = double.Parse(value);
+                onPropertyChanged(nameof(TotalIncome));
+            }
+        }
+        private double totalExpense;
+        public string TotalExpense
+        {
+            get { return strConv.money(totalExpense); }
+            set
+            {
+                totalExpense = double.Parse(value);
+                onPropertyChanged(nameof(TotalExpense));
+            }
+        }
+        private double totalOrdersValue;
+        public string TotalOrdersValue
+        {
+            get { return strConv.money(totalOrdersValue); }
+            set
+            {
+                totalOrdersValue = double.Parse(value);
+                onPropertyChanged(nameof(TotalOrdersValue));
+            }
+        }
+        private double totalOrdersCost;
+        public string TotalOrdersCost
+        {
+            get { return strConv.money(totalOrdersCost); }
+            set
+            {
+                totalOrdersCost = double.Parse(value);
+                onPropertyChanged(nameof(TotalOrdersCost));
+            }
+        }
+        private int highestLevel;
+        public int HighestLevel
+        {
+            get { return highestLevel; }
+            set
+            {
+                highestLevel = value;
+                onPropertyChanged(nameof(HighestLevel));
             }
         }
 

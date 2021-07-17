@@ -18,5 +18,6 @@
         <ContentControl x:Name="gameContent" Visibility="{Binding Path=GameVis}"/>
         <ContentControl x:Name="dateContent" Visibility="{Binding Path=DateVis}"/>
         <ContentControl x:Name="NGContent" Visibility="{Binding Path=NGVis}"/>
+        <ContentControl x:Name="GOContent" Visibility="{Binding Path=GOVis}"/>
     </Grid>
 </Window>

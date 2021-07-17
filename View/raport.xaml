@@ -43,7 +43,8 @@
             <TextBlock Margin="0,0,10,0" FontSize="18" VerticalAlignment="Center">Opłaty miesięczne:</TextBlock>
             <TextBlock Text="{Binding RentValueString}" VerticalAlignment="Center" FontSize="18" FontFamily="Arial"/>
         </StackPanel>
-        <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Visibility="{Binding IsAlert}"
+        <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
+                    Visibility="{Binding IsAlert}"
                     Margin="10" VerticalAlignment="Center">
             <TextBlock Text="{Binding AlertText}" HorizontalAlignment="Center" FontSize="18" FontFamily="Consolas" Foreground="Red">Istnieje możliwość zwiększenia poziomu sklepu</TextBlock>
         </StackPanel>

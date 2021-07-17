@@ -87,6 +87,9 @@
     <Compile Include="View\game.xaml.cs">
       <DependentUpon>game.xaml</DependentUpon>
     </Compile>
+    <Compile Include="View\gameover.xaml.cs">
+      <DependentUpon>gameover.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\menu.xaml.cs">
       <DependentUpon>menu.xaml</DependentUpon>
     </Compile>
@@ -125,6 +128,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\game.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\gameover.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -207,6 +214,8 @@
     <Content Include="sounds\beep.mp3" />
     <Content Include="sounds\cash.mp3" />
     <Content Include="sounds\bell.mp3" />
+    <Content Include="sounds\funeral.mp3" />
+    <Content Include="sounds\trombone.mp3" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
