@@ -18,15 +18,63 @@ namespace SklepexPOL.ViewModel
     using R = Properties.Settings;
     class MainViewModel : BaseViewModel
     {
-        //DateTime timeStamp = R.Default.TodayDate;
-        //int RCCV = R.Default.ClientsCountValue;
-        
         //generator klientów i zakupów
         clientRandomizer randomizer = new clientRandomizer();
         moneyCounter moneyManager = new moneyCounter();
         stringConventer strConv = new stringConventer();
         interactions intercom = new interactions();
 
+        //uruchamianie sie aplikacji
+        private ICommand hello;
+        public ICommand Hello
+        {
+            get
+            {
+                return hello ?? new RelayCommand(p => initialize(), null);
+            }
+        }
+        private void initialize()
+        {
+            bool connection = false;
+            //mysql - sprawdź czy jest połączenie
+            //nie ma połączenia z sql
+            if (!connection)
+            {
+                intercom.message("Nie można nawiązać połączenia z bazą danych!\nFunkcja gry zostaje dezaktywowana.", "Brak połączenia z bazą danych!");
+                IsSQL = false;
+                IsSavedGame = false;
+            }
+            //jest
+            else
+            {
+                IsSQL = true;
+                bool db = false;
+                //mysql - sprawdź czy jest baza
+                //jeśli nie ma
+                if (!db) 
+                {
+                    IsSavedGame = false;
+                    R.Default.IsGameSaved = false;
+                    R.Default.SoldItemsString = "";
+                    R.Default.Save();
+                    //mysql - zaimportuj plik baza.sql
+                }
+                //jest
+                else
+                {
+                    IsSavedGame = R.Default.IsGameSaved;
+                    //jeśli jest zapis gry
+                    if (R.Default.IsGameSaved) 
+                    { 
+                        //wczytaj dane z bazy i appOpen, oSklepie, dostawcy, naStanie, doDostarczenia                
+                    }
+                }
+                
+            }
+            
+        }
+
+        //zamykanie sie aplikacji
         private ICommand goodBye;
         public ICommand GoodBye
         {
@@ -37,11 +85,40 @@ namespace SklepexPOL.ViewModel
         }
         private void saveProperties()
         {
-            R.Default.Save();
+            if (R.Default.IsGameSaved)
+            {
+                R.Default.ClientsCountValue = TodayClientsValue;
+                R.Default.TodayDate = TodayDate;
+                R.Default.SoldItemsString = TSI();
+                R.Default.Save();
+            }
         }
 
 
         #region panel menu i gry
+        //czy jest połączenie z sql
+        private bool isSQL;
+        public bool IsSQL
+        {
+            get { return isSQL; }
+            set
+            {
+                isSQL = value;
+                onPropertyChanged(nameof(IsSQL));
+            }
+        }
+        //czy jest zapisana gra
+        private bool isSavedGame;
+        public bool IsSavedGame
+        {
+            get { return isSavedGame; }
+            set
+            {
+                isSavedGame = value;
+                onPropertyChanged(nameof(IsSavedGame));
+            }
+        }
+
         //Widoczność menu/gry
         private Visibility menuVis = Visibility.Visible;
         public Visibility MenuVis
@@ -79,7 +156,7 @@ namespace SklepexPOL.ViewModel
             get { return nGVis; }
             set
             {
-                dateVis = value;
+                nGVis = value;
                 onPropertyChanged(nameof(NGVis));
             }
         }
@@ -93,7 +170,6 @@ namespace SklepexPOL.ViewModel
                 return windowMenu ?? new RelayCommand(prop => menuWindow(),null);
             }
         }
-
         private void menuWindow()
         {
             MenuVis = Visibility.Visible;
@@ -111,17 +187,23 @@ namespace SklepexPOL.ViewModel
         
         private async Task gameWindowAsync()
         {
+            //inicjacja spisu produktów na stanie itd. - z bazy
             double[] key = new double[] { 110, 5 };
             Dictionary<string, double[]> slownik = new Dictionary<string, double[]>();
             slownik.Add("pomidor", key);
             slownik.Add("ogórek", key);
             slownik.Add("Brokuł", key);
             OnHouseItems = slownik;
+            //Wywołanie wyświetlacza słownego dnia tygodnia
             TDN();
+            //wczytanie z zapisu gry, co ostatnio (dzisiaj) sprzedano
             TodaySoldItems = R.Default.SoldItemsString;
+            //zmiana widoczności okien
             MenuVis = Visibility.Collapsed;
             DateVis = Visibility.Visible;
+            //chwila odpoczynku
             await Task.Delay(3000);
+            //zmiana widoczności okien
             dateGameSwitch();
         }
 
@@ -219,7 +301,11 @@ namespace SklepexPOL.ViewModel
         //funkcja przechodzenia do następnego dnia
         private async Task dayChangeAsync()
         {
+            //zwiększenie daty o 1
             TodayDate = TodayDate.AddDays(1);
+            //mysql => NextDay()
+            //mysql Update info set Ruch = TodayClientsValue
+            //słowny zapis dnia
             TDN();
             MediaPlayer player = new MediaPlayer();
             //muzyczka
@@ -234,13 +320,16 @@ namespace SklepexPOL.ViewModel
                 player.Open(new Uri(@"../../sounds/"+sounds[index], UriKind.Relative));
             }
             player.Play();
+            //przejście z widoku gry na widok daty
             gameDateSwitch();
+            //generowanie klientów i ich zakupów
             TodayClientsValue = randomizer.clientsCreator(TodayClientsValue, ShopMargin, ShopState, ShopLevel, TodayDate);
             SoldItems = randomizer.shopListGenerator(TodayClientsValue, OnHouseItems, ShopLevel, TodayDate);
-            //TSI();
             R.Default.SoldItemsString = TSI();
             R.Default.Save();
+            //chwila odpoczynku
             await Task.Delay(3000);
+            //przejście z daty do gry
             dateGameSwitch();
         }
         //przejście z ekranu daty do ekranu gry
@@ -399,7 +488,7 @@ namespace SklepexPOL.ViewModel
             get { return moneyIncome; }
             set
             {
-                moneyBalance = Math.Round(value, 2);
+                moneyIncome = Math.Round(value, 2);
                 onPropertyChanged(nameof(MoneyIncome));
             }
         }
@@ -414,7 +503,7 @@ namespace SklepexPOL.ViewModel
             get { return moneyExpense; }
             set
             {
-                moneyBalance = Math.Round(value, 2);
+                moneyExpense = Math.Round(value, 2);
                 onPropertyChanged(nameof(MoneyExpense));
             }
         }
@@ -757,6 +846,20 @@ namespace SklepexPOL.ViewModel
         #endregion
 
         #region nowa gra
+        private ICommand newGameView;
+        public ICommand NewGameView
+        {
+            get
+            {
+                return newGameView ?? new RelayCommand(p => gameScreen(), null);
+            }
+        }
+        private void gameScreen()
+        { 
+            NGVis = Visibility.Visible;
+            MenuVis = Visibility.Collapsed;    
+        }
+
         private ICommand cancelNG;
         public ICommand CancelNG
         {
@@ -767,7 +870,8 @@ namespace SklepexPOL.ViewModel
         }
         private void NGCancel()
         {
-
+           MenuVis = Visibility.Visible;
+           NGVis = Visibility.Collapsed;
         }
 
         private ICommand nG;
@@ -780,7 +884,86 @@ namespace SklepexPOL.ViewModel
         }
         private void NowaGra()
         {
-            Console.WriteLine(ShopNameInpt);
+            bool confirm = false;
+            //jeśli jest zapis
+            if (R.Default.IsGameSaved)
+                if (intercom.YesOrNo("Wykryto zapisaną grę.\nCzy na pewno chcesz utworzyć nowy zapis gry?\nPoprzedni zapis zostanie usunięty bezpowrotnie!", "Czy chcesz utworzyć nową grę?"))
+                    confirm = true;
+
+            //jeśli nie ma zapisu lub jest i jest zgoda na nadpisanie
+            if (!R.Default.IsGameSaved || confirm)
+            {
+                //sql theblip
+                //mysql => select @@sql_mode; -> do zmiennej
+                //mysql => SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
+                //mysql => Insert Into zamowienia Values(0,CURDATE(),CURDATE(),0,0);
+                //mysql => SET SESSION sql_mode <zmienna> 
+                
+                //Console.WriteLine(ShopNameInpt);
+                //Console.WriteLine(SelectedShopType);
+
+                //typ sklepu
+                switch (SelectedShopType)
+                {
+                    //spożywczy
+                    case 0:
+                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
+                        break;
+                    //warzywniak
+                    case 1:
+                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
+                        break;
+                    //RTV AGD
+                    case 2:
+                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
+                        break;
+                    //mięsny
+                    case 3:
+                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
+                        break;
+                    //drogeria
+                    case 4:
+                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
+                        break;
+                    //butik
+                    case 5:
+                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
+                        break;
+                    //papierniczy
+                    case 6:
+                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
+                        break;
+                    //piekarnia
+                    case 7:
+                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
+                        break;
+                    //ogrodniczy
+                    case 8:
+                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
+                        break;
+                    //market
+                    case 9:
+                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
+                        break;
+                    //monopolowy
+                    case 10:
+                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
+                        break;
+                }
+                string query = "Insert Into info Values ('"+ 
+                    ShopNameInpt.Replace('"', '\"').Replace("'", "\'") +
+                    "',CURDATE(),2000,CURDATE(),0.4,0,0,0,0,0,0,0,10,"+(SelectedShopType+1)+",1,1);";
+                //mysql => query
+                //mysql => Update stan Set Liczba_zamowien = 0;
+
+                R.Default.ClientsCountValue = 10;
+                R.Default.TodayDate = DateTime.Now;
+                R.Default.SoldItemsString = "";
+                R.Default.IsGameSaved = true;
+                R.Default.Save();
+
+
+            }
         }
         private string shopNameInpt;
         public string ShopNameInpt
@@ -795,7 +978,19 @@ namespace SklepexPOL.ViewModel
                 onPropertyChanged(nameof(ShopNameInpt));
             }
         }
+
+        private int selectedShopType = 0;
+        public int SelectedShopType
+        {
+            get { return selectedShopType; }
+            set
+            {
+                selectedShopType = value;
+                onPropertyChanged(nameof(SelectedShopType));
+            }
+        }
         #endregion
+
         #region zamknięcie sklepu/przegrana
 
         private ICommand sepuku;
