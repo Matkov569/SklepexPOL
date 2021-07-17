@@ -10,6 +10,13 @@
         <Style TargetType="TextBlock">
             <Setter Property="FontSize" Value="20"/>
         </Style>
+        <Style TargetType="Button">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="Margin" Value="0,10"/>
+            <Setter Property="Height" Value="40"/>
+            
+
+        </Style>
     </UserControl.Resources>
     
     <Grid>
@@ -95,7 +102,7 @@
             <Button Content="(?) Poziomy sklepu" Command="{Binding InfoBox}" CommandParameter="Level"/>
             <Button Content="(?) Rodzaje sklepu" Command="{Binding InfoBox}" CommandParameter="Type"/>
             <Button Content="(?) Stan sklepu" Command="{Binding InfoBox}" CommandParameter="State"/>
-            <Button Content="Zamknij sklep" Command="{Binding Sepuku}"/>
+            <Button Margin="0,43,0,0" Content="Zamknij sklep" Command="{Binding Sepuku}"/>
         </StackPanel>
     </Grid>
 </UserControl>
