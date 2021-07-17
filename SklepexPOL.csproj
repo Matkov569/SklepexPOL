@@ -71,10 +71,12 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Model\clientRandomizer.cs" />
+    <Compile Include="Model\interactions.cs" />
     <Compile Include="Model\moneyCounter.cs" />
     <Compile Include="Model\orders.cs" />
     <Compile Include="Model\shopInfo.cs" />
     <Compile Include="Model\sqlmanager.cs" />
+    <Compile Include="Model\stringConventer.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="ViewModel\BaseClass\BaseViewModel.cs" />
     <Compile Include="ViewModel\BaseClass\RelayCommand.cs" />

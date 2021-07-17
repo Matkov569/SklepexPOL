@@ -34,11 +34,8 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style x:Key="txtB" TargetType="TextBox">
+        <Style x:Key="brdr" TargetType="Border">
             <Setter Property="Margin" Value="10"/>
-            <Setter Property="FontSize" Value="40"/>
-            <Setter Property="FontFamily" Value="/SklepexPOL;component/fonts/#DS-Digital"/>
-            <Setter Property="Background" Value="Gray"/>
             <Setter Property="BorderBrush">
                 <Setter.Value>
                     <RadialGradientBrush>
@@ -49,7 +46,15 @@
             </Setter>
             <Setter Property="BorderThickness" Value="5"/>
         </Style>
+        <Style x:Key="txtB" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="FontSize" Value="40"/>
+            <Setter Property="FontFamily" Value="/SklepexPOL;component/fonts/#DS-Digital"/>
+            <Setter Property="Background" Value="Gray"/>
+            
+        </Style>
         <Style x:Key="txtBl" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,0,0,10"/>
             <Setter Property="FontSize" Value="20"/>
             <Setter Property="FontFamily" Value="Verdana"/>
             <Setter Property="Foreground" Value="White"/>
@@ -138,35 +143,50 @@
         <StackPanel Grid.Row="0" Grid.Column="0" Grid.RowSpan="2">
             <StackPanel Margin="10,0,10,0">
                 <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="0 10 0 0">
-                    <TextBox Style="{StaticResource txtB}" Foreground="White" 
+                    <Border Style="{StaticResource brdr}">
+                        <TextBlock Style="{StaticResource txtB}" Foreground="White" 
                              TextAlignment="Right" 
-                             IsHitTestVisible="False">200 $</TextBox>
+                             IsHitTestVisible="False"
+                             Text="{Binding MoneyBalanceString}"/>
+                        
+                    </Border>
                     <TextBlock Style="{StaticResource txtBl}" 
-                               HorizontalAlignment="Center">
-                        Saldo początkowe</TextBlock>
+                               HorizontalAlignment="Center">Saldo początkowe</TextBlock>
                 </StackPanel>
                 <StackPanel Orientation="Vertical"  VerticalAlignment="Center" Margin="0 10 0 0">
-                    <TextBox Style="{StaticResource txtB}" Foreground="Lime" 
+                    <Border Style="{StaticResource brdr}">
+                        <TextBlock Style="{StaticResource txtB}" Foreground="Lime" 
                              TextAlignment="Right" 
-                             IsHitTestVisible="False">200 $</TextBox>
+                             IsHitTestVisible="False"
+                             Text="{Binding MoneyIncomeString}"/>
+                    </Border>
                     <TextBlock Style="{StaticResource txtBl}" HorizontalAlignment="Center">Dochód</TextBlock>
                 </StackPanel>
                 <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="0 10 0 0">
-                    <TextBox Style="{StaticResource txtB}" Foreground="#FFB40000" 
+                    <Border Style="{StaticResource brdr}">
+                        <TextBlock Style="{StaticResource txtB}" Foreground="#FFB40000" 
                              TextAlignment="Right" 
-                             IsHitTestVisible="False">200 $</TextBox>
+                             IsHitTestVisible="False"
+                             Text="{Binding MoneyExpenseString}"/>
+                    </Border>
                     <TextBlock Style="{StaticResource txtBl}" HorizontalAlignment="Center">Wydatki</TextBlock>
                 </StackPanel>
                 <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="0 10 0 0">
-                    <TextBox Style="{StaticResource txtB}" Foreground="Yellow" 
+                    <Border Style="{StaticResource brdr}">
+                        <TextBlock Style="{StaticResource txtB}" Foreground="Yellow" 
                              TextAlignment="Right" 
-                             IsHitTestVisible="False">0 $</TextBox>
+                             IsHitTestVisible="False"
+                             Text="{Binding MoneyProfit}"/>
+                    </Border>
                     <TextBlock Style="{StaticResource txtBl}" HorizontalAlignment="Center">Zysk</TextBlock>
                 </StackPanel>
                 <StackPanel Orientation="Vertical"  VerticalAlignment="Center" Margin="0 20 0 0">
-                    <TextBox Style="{StaticResource txtB}" Foreground="White" 
+                    <Border Style="{StaticResource brdr}">
+                        <TextBlock Style="{StaticResource txtB}" Foreground="White" 
                              TextAlignment="Right" 
-                             IsHitTestVisible="False">200 $</TextBox>
+                             IsHitTestVisible="False"
+                             Text="{Binding MoneySummary}"/>
+                    </Border>
                     <TextBlock Style="{StaticResource txtBl}" HorizontalAlignment="Center">Podsumowanie</TextBlock>
                 </StackPanel>
             </StackPanel>

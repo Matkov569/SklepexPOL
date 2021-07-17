@@ -6,9 +6,16 @@
              xmlns:local="clr-namespace:SklepexPOL.View"
              mc:Ignorable="d" 
              d:DesignHeight="540" d:DesignWidth="986">
+    <UserControl.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="FontSize" Value="20"/>
+        </Style>
+    </UserControl.Resources>
+    
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition></ColumnDefinition>
+            <ColumnDefinition Width="7*"></ColumnDefinition>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition></RowDefinition>
@@ -16,6 +23,79 @@
         <Grid.Background>
             <SolidColorBrush Color="#FFFFFBD5"/>
         </Grid.Background>
-        <TextBlock>SKLEP - informacje</TextBlock>
+
+        <StackPanel Margin="15" Grid.Column="0" >
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <TextBlock Text="Nazwa: " FontFamily="Arial"></TextBlock>
+                <TextBlock Text="{Binding ShopName}" FontFamily="Times New Roman"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <TextBlock Text="Data otwarcia: " FontFamily="Arial"></TextBlock>
+                <TextBlock Text="{Binding OpenDateString}" FontFamily="Times New Roman"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <TextBlock Text="Poziom sklepu: " FontFamily="Arial"></TextBlock>
+                <TextBlock Text="{Binding ShopLevelStr}" FontFamily="Times New Roman"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <TextBlock Text="Rodzaj sklepu: " FontFamily="Arial"></TextBlock>
+                <TextBlock Text="{Binding ShopTypeString}" FontFamily="Times New Roman"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <TextBlock Text="Marża: " FontFamily="Arial"></TextBlock>
+                <TextBlock Text="{Binding MarginString}" FontFamily="Times New Roman"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <TextBlock Text="Pojemność magazynu: " FontFamily="Arial"></TextBlock>
+                <TextBlock Text="{Binding StorageSize}" FontFamily="Times New Roman"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <TextBlock Text="Zajętość magazynu: " FontFamily="Arial"></TextBlock>
+                <TextBlock Text="{Binding StorageSpace}" FontFamily="Times New Roman"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <TextBlock Text="Stan sklepu: " FontFamily="Arial"></TextBlock>
+                <TextBlock Text="{Binding ShopStateStr}" FontFamily="Times New Roman"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <TextBlock Text="Liczba klientów: " FontFamily="Arial"></TextBlock>
+                <TextBlock Text="{Binding TodayClientsValue}" FontFamily="Times New Roman"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <TextBlock Text="Liczba pracowników: " FontFamily="Arial"></TextBlock>
+                <TextBlock Text="{Binding ShopEmployees}" FontFamily="Times New Roman"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <TextBlock Text="Wynagrodzenie pracownika: " FontFamily="Arial"></TextBlock>
+                <TextBlock Text="{Binding EmployeeString}" FontFamily="Times New Roman"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <TextBlock Text="Opłaty miesięczne: " FontFamily="Arial"></TextBlock>
+                <TextBlock Text="{Binding RentValueString}" FontFamily="Times New Roman"/>
+            </StackPanel>
+            <StackPanel Margin="10" Visibility="{Binding IsMarginSliderVisible}" HorizontalAlignment="Center">
+                <TextBlock Margin="0,20,0,0" HorizontalAlignment="Center">Marża:</TextBlock>
+                <StackPanel Orientation="Horizontal">
+                    <Slider x:Name="MarginSlider" Minimum="0" Maximum="1" TickFrequency="0.05" 
+                            Width="500" Margin="0,0,10,0" Height="20" VerticalAlignment="Center" 
+                            HorizontalAlignment="Center" IsSnapToTickEnabled="True"/>
+                    <TextBlock Height="30" Text="{Binding Path=Value, ElementName=MarginSlider, 
+                        StringFormat=N2}" Width="50"/>
+                    <Button Command="{Binding MarginChange}" 
+                            CommandParameter="{Binding Path=Value, ElementName=MarginSlider}" 
+                            Content="Zmień" Width="80" FontSize="19"/>
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+        <StackPanel Margin="15" Grid.Column="1">
+            <Button Content="Zmień marżę" Command="{Binding MarginEnabler}"/>
+            <Button Content="Zatrudnij pracownika" Command="{Binding Hire}"/>
+            <Button Content="Zwolnij pracownika" Command="{Binding Fire}"/>
+            <Button Content="Zwiększ poziom sklepu" IsEnabled="{Binding IsLvlUp}"  Command="{Binding LevelUp}"/>
+            <Button Content="(?) Poziomy sklepu" Command="{Binding InfoBox}" CommandParameter="Level"/>
+            <Button Content="(?) Rodzaje sklepu" Command="{Binding InfoBox}" CommandParameter="Type"/>
+            <Button Content="(?) Stan sklepu" Command="{Binding InfoBox}" CommandParameter="State"/>
+            <Button Content="Zamknij sklep" Command="{Binding Sepuku}"/>
+        </StackPanel>
     </Grid>
 </UserControl>

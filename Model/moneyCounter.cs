@@ -9,11 +9,11 @@ namespace SklepexPOL.Model
     class moneyCounter
     {
         //funkcja obliczająca zysk ze sprzedaży
-        public double stonksCalc(Dictionary <string,int[]> soldList, int margin)
+        public double stonksCalc(Dictionary<string, int[]> soldList, int margin)
         {
             double income = 0;
             int[] helper;
-            foreach(KeyValuePair<string,int[]> produkt in soldList)
+            foreach (KeyValuePair<string, int[]> produkt in soldList)
             {
                 helper = produkt.Value;
                 //0 - ilość, 1 - cena, 2 - podatek, 3 - marża dostawcy

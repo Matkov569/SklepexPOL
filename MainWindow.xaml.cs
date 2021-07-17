@@ -33,8 +33,8 @@ namespace SklepexPOL
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            //MainViewModel vm = this.DataContext as MainViewModel;
-            //vm.GoodBye.Execute(null);
+            MainViewModel vm = this.DataContext as MainViewModel;
+            vm.GoodBye.Execute(null);
         }
     }
 }
