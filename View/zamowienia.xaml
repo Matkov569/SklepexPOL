@@ -19,19 +19,19 @@
         <StackPanel Margin="10" Width="966" Height="520">
             <ListView ItemsSource="{Binding Deliveries}">
                 <ListView.View>
-                    <GridView>
+                    <GridView AllowsColumnReorder="False">
                         <GridViewColumn Header="ID" Width="50" DisplayMemberBinding="{Binding ID}"></GridViewColumn>
                         <GridViewColumn Header="Dostawca" Width="250" DisplayMemberBinding="{Binding Name}"></GridViewColumn>
                         <GridViewColumn Header="Data zamówienia" Width="150" DisplayMemberBinding="{Binding ODate}"></GridViewColumn>
                         <GridViewColumn Header="Data dostarczenia" Width="150" DisplayMemberBinding="{Binding DDate}"></GridViewColumn>
                         <GridViewColumn Header="Koszt" Width="150" DisplayMemberBinding="{Binding Cost}"></GridViewColumn>
-                        <GridViewColumn  Header="Podgląd" Width="150">
+                        <GridViewColumn  Header="Podgląd" Width="100">
                             <GridViewColumn.CellTemplate>
-                                <DataTemplate >
+                                <DataTemplate>
                                     <Button Content="Podgląd" 
                                              Command="{Binding Action}" 
                                              CommandParameter="{Binding ID}"
-                                             />
+                                             Margin="10,0"/>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>

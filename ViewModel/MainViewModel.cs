@@ -543,6 +543,73 @@ namespace SklepexPOL.ViewModel
         {
             get { return strConv.percentage(ProPod); }
         }
+
+        //czy można zmienić dostawce - zależy od tego czy w liście jest jakaś pozycja czy nie
+        public bool DeliveryEnabled
+        {
+            get 
+            {
+                if (cartList.Count() == 0) return true;
+                else return false;
+            }
+
+        }
+
+        private structs.noweHandler cartList = new structs.noweHandler();
+        public List<structs.nowe> ShoppingCart
+        {
+            get { return cartList.Items; }
+        }
+        public void DeliveriesToListView()
+        {
+            var x = cartList.Item(0);
+            //wczytaj z mysql zamowienia (widok dodostarczenia)
+            //foreach (kolejne rekordy w wynikach mysql)
+            //{
+            Button btn = new Button();
+            btn.Content = "Podgląd";
+            btn.Command = DeliveryLook;
+            btn.CommandParameter = 0;
+            ordersList.Add(new structs.zamowienia()
+            {
+                ID = "id dostawcy",
+                Name = "Nazwa dostawcy",
+                ODate = "Data zamówienia w formacie dd/MM/yyyy",
+                DDate = "Data dostarczenia w formacie dd/MM/yyyy",
+                Cost = "Koszt zamówienia - strConv.money(kwota)",
+                Action = DeliveryLook
+            });
+            //}
+        }
+
+        //wybrany index
+        private int shoppingListIndex;
+        public int ShoppingListIndex
+        {
+            get { return shoppingListIndex; }
+            set
+            {
+                shoppingListIndex = value;
+                onPropertyChanged(nameof(ShoppingListIndex));
+                readFromList(value);
+            }
+        }
+
+        private void readFromList(int index)
+        {
+            //nic nie wybrano
+            if(index == -1)
+            {
+                //wszystko puste
+            }
+            else
+            {
+                structs.nowe x = cartList.Item(index);
+                //przypisanie zmiennych
+            }
+
+        }
+
         #endregion
 
         #region co jest na stanie

@@ -43,16 +43,18 @@ namespace SklepexPOL.Model
         //nowe zamówienie
         public struct nowe
         {
-            public int ID;
-            public string Name;
-            public int Days;
-            public int Count;
-            public nowe(int _id, string _name, int _days, int _count)
+            public int ID { get; set; }
+            public string Name { get; set; }
+            public int Count { get; set; }
+            public string Cost { get; set; }
+            public ICommand Action { get; set; }
+            public nowe(int _id, string _name, int _count, string _cost, ICommand _action)
             {
                 ID = _id;
                 Name = _name;
-                Days = _days;
                 Count = _count;
+                Cost = _cost;
+                Action = _action;
             }
         }
         public class noweHandler
@@ -63,10 +65,27 @@ namespace SklepexPOL.Model
             }
 
             public List<nowe> Items { get; private set; }
-
             public void Add(nowe item)
             {
                 Items.Add(item);
+            }
+            public void Remove(nowe item)
+            {
+                Items.Remove(item);
+            }
+            public void Clear()
+            {
+                Items.Clear();
+            }
+            public nowe Item(int index)
+            {
+                if (index < Items.Count)
+                    return Items[index];
+                else return default(nowe);
+            }
+            public int Count()
+            {
+                return Items.Count();
             }
         }
         //zamówienia
