@@ -14,31 +14,39 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="9*"></RowDefinition>
             <RowDefinition Height="1*"></RowDefinition>
+            <RowDefinition Height="1*"></RowDefinition>
         </Grid.RowDefinitions>
         <Grid.Background>
             <SolidColorBrush Color="#FFFFFBD5"/>
         </Grid.Background>
         <StackPanel Margin="11" Grid.Row="0" Grid.Column="0">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Margin="0,0,10,0">Dzisiejsza liczba klientów:</TextBlock>
-                <TextBlock Text="{Binding TodayClientsValue}"/>
+            <StackPanel Orientation="Horizontal" Margin="10">
+                <TextBlock Margin="0,0,10,0" FontFamily="Arial" FontSize="22">Dzisiejsza liczba klientów:</TextBlock>
+                <TextBlock Text="{Binding TodayClientsValue}" FontSize="22"/>
             </StackPanel>
             <StackPanel>
-                <TextBlock>Sprzedane towary:</TextBlock>
-                <TextBlock Text="{Binding TodaySoldItems}"/>
+                <TextBlock FontSize="20" FontFamily="Arial" HorizontalAlignment="Center">Sprzedane towary:</TextBlock>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <TextBlock Text="{Binding TodaySoldItems}" FontSize="16"/>
+                </ScrollViewer>
             </StackPanel>
         </StackPanel>
-        <StackPanel  Margin="11" Grid.Row="0" Grid.Column="1">
-            <TextBlock>Dzisiejsze dostawy:</TextBlock>
-            <TextBlock>Zamówienie nr 4</TextBlock>
+        <StackPanel  Margin="11" Grid.Row="0" Grid.Column="1" Visibility="{Binding IDD}">
+            <TextBlock FontSize="22" FontFamily="Arial" HorizontalAlignment="Center" Margin="10">Dzisiejsze dostawy:</TextBlock>
+            <TextBlock  FontSize="20" FontFamily="Arial">Zamówienie nr 4 - Mięsopol</TextBlock>
         </StackPanel>
-        <StackPanel  Margin="11" Grid.Row="1" Grid.Column="0" Orientation="Horizontal">
-            <TextBlock>Wynagrodzenie pracowników: </TextBlock>
-            <TextBox>1200$</TextBox>
+        <StackPanel  Margin="10" Grid.Row="2" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+            <TextBlock Margin="0,0,10,0" FontSize="18" VerticalAlignment="Center">Wynagrodzenie pracowników: </TextBlock>
+            <TextBlock Text="{Binding SalaryString}"  VerticalAlignment="Center" FontSize="18" FontFamily="Arial"/>
         </StackPanel>
-        <StackPanel  Margin="11" Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
-            <TextBlock>Opłaty miesięczne:</TextBlock>
-            <TextBox>1200$</TextBox>
+        <StackPanel Visibility="{Binding IPD}"  Margin="10" Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
+            <TextBlock Margin="0,0,10,0" FontSize="18" VerticalAlignment="Center">Opłaty miesięczne:</TextBlock>
+            <TextBlock Text="{Binding RentValueString}" VerticalAlignment="Center" FontSize="18" FontFamily="Arial"/>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
+                    Visibility="{Binding IA}"
+                    Margin="10" VerticalAlignment="Center">
+            <TextBlock Text="{Binding AlertText}" HorizontalAlignment="Center" FontSize="18" FontFamily="Consolas" Foreground="Red">Istnieje możliwość zwiększenia poziomu sklepu</TextBlock>
         </StackPanel>
     </Grid>
 </UserControl>

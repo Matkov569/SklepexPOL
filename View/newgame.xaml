@@ -29,7 +29,8 @@
         <StackPanel VerticalAlignment="Center" 
                     HorizontalAlignment="Center" Grid.Row="1">
             <TextBlock FontSize="24" FontFamily="Arial" Margin="10" HorizontalAlignment="Center">Wybierz rodzaj swojego sklepu:</TextBlock>
-            <ComboBox Width="470" FontFamily="Consolas" FontSize="24" Margin="10">
+            <ComboBox Width="470" FontFamily="Consolas" FontSize="24" Margin="10" 
+                      SelectedIndex="{Binding SelectedShopType}">
                 <ComboBoxItem IsSelected="True" Content="Ogólny"/>
                 <ComboBoxItem Content="Spożywczy"/>
                 <ComboBoxItem Content="Warzywniak"/>
@@ -76,9 +77,7 @@
                 <Button Command="{Binding CancelNG}"
                         Width="300" FontFamily="Consolas" FontSize="24" Height="50" 
                         Margin="10,10,30,10">
-                    <Button.CommandParameter>
-                        <Binding Path="Text" ElementName="ShopNameInput"/>
-                    </Button.CommandParameter>Anuluj</Button>
+                    Anuluj</Button>
                 <Button Command="{Binding NG}" Width="300" FontFamily="Consolas" FontSize="24" Height="50" Margin="30,10,10,10">Rozpocznij grę</Button>
             </StackPanel>
         </StackPanel>

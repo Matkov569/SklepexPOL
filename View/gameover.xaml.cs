@@ -16,18 +16,13 @@ using System.Windows.Shapes;
 namespace SklepexPOL.View
 {
     /// <summary>
-    /// Logika interakcji dla klasy zamowienia.xaml
+    /// Logika interakcji dla klasy gameover.xaml
     /// </summary>
-    public partial class zamowienia : UserControl
+    public partial class gameover : UserControl
     {
-        public zamowienia()
+        public gameover()
         {
             InitializeComponent();
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-
         }
     }
 }

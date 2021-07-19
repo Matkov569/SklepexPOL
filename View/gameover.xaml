@@ -1,0 +1,93 @@
+﻿<UserControl x:Class="SklepexPOL.View.gameover"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:SklepexPOL.View"
+              xmlns:vm="clr-namespace:SklepexPOL.ViewModel"
+             mc:Ignorable="d" 
+             d:DesignHeight="720" d:DesignWidth="1280">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"></RowDefinition>
+            <RowDefinition Height="3*"></RowDefinition>
+            <RowDefinition Height="1*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid.Background>
+            <SolidColorBrush Color="#FFE4E4E4"/>
+        </Grid.Background>
+        
+        <StackPanel VerticalAlignment="Center" 
+                    HorizontalAlignment="Center" Grid.Row="0" Margin="10">
+            <TextBlock FontSize="92" FontFamily="/SklepexPOL;component/fonts/#DS-Digital" Margin="10" 
+                       HorizontalAlignment="Center" FontWeight="Bold" TextDecorations="{x:Null}">KONIEC GRY</TextBlock>
+        
+    </StackPanel>
+        <StackPanel VerticalAlignment="Center" 
+                    HorizontalAlignment="Center" Grid.Row="1">
+            <TextBlock FontSize="28" FontFamily="Arial" Margin="10" 
+                       HorizontalAlignment="Center" FontWeight="Bold">Podsumowanie</TextBlock>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock FontSize="24" FontFamily="Arial" Margin="10" 
+                       HorizontalAlignment="Center" FontWeight="Bold">Sklep :</TextBlock>
+                <TextBlock FontSize="24" FontFamily="Arial" Margin="10" 
+                       HorizontalAlignment="Center" Text="{Binding ShopName}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock FontSize="24" FontFamily="Arial" Margin="10" 
+                       HorizontalAlignment="Center" FontWeight="Bold">Data otwarcia :</TextBlock>
+                <TextBlock FontSize="24" FontFamily="Arial" Margin="10" 
+                       HorizontalAlignment="Center" Text="{Binding OpenDateString}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock FontSize="24" FontFamily="Arial" Margin="10" 
+                       HorizontalAlignment="Center" FontWeight="Bold">Data zamknięcia :</TextBlock>
+                <TextBlock FontSize="24" FontFamily="Arial" Margin="10" 
+                       HorizontalAlignment="Center" Text="{Binding TodayDate, StringFormat=dd/MM/yyyy}"/>
+            </StackPanel>
+        
+            <StackPanel Orientation="Horizontal">
+                <TextBlock FontSize="24" FontFamily="Arial" Margin="10" 
+                       HorizontalAlignment="Center" FontWeight="Bold">Dochód całkowity :</TextBlock>
+                <TextBlock FontSize="24" FontFamily="Arial" Margin="10" 
+                       HorizontalAlignment="Center" Text="{Binding TotalIncome}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock FontSize="24" FontFamily="Arial" Margin="10" 
+                       HorizontalAlignment="Center" FontWeight="Bold">Wydatki całkowite :</TextBlock>
+                <TextBlock FontSize="24" FontFamily="Arial" Margin="10" 
+                       HorizontalAlignment="Center" Text="{Binding TotalExpense}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock FontSize="24" FontFamily="Arial" Margin="10" 
+                       HorizontalAlignment="Center" FontWeight="Bold">Liczba złożonych zamówień :</TextBlock>
+                <TextBlock FontSize="24" FontFamily="Arial" Margin="10" 
+                       HorizontalAlignment="Center" Text="{Binding TotalOrdersValue}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock FontSize="24" FontFamily="Arial" Margin="10" 
+                       HorizontalAlignment="Center" FontWeight="Bold">Koszt złożonych zamówień :</TextBlock>
+                <TextBlock FontSize="24" FontFamily="Arial" Margin="10" 
+                       HorizontalAlignment="Center" Text="{Binding TotalOrdersCost}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock FontSize="24" FontFamily="Arial" Margin="10" 
+                       HorizontalAlignment="Center" FontWeight="Bold">Najwyższy osiągnięty poziom :</TextBlock>
+                <TextBlock FontSize="24" FontFamily="Arial" Margin="10" 
+                       HorizontalAlignment="Center" Text="{Binding HighestLevel}"/>
+            </StackPanel>
+        </StackPanel>
+        <StackPanel VerticalAlignment="Center" 
+                    HorizontalAlignment="Center" Grid.Row="2">
+            <StackPanel Orientation="Horizontal">
+                <Button Command="{Binding GOmenu}"
+                        Width="300" FontFamily="Consolas" FontSize="24" Height="50" 
+                        Margin="10">Powrót do menu
+                </Button>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="SklepexPOL.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
     <Setting Name="SoldItemsString" Type="System.String" Scope="User">
@@ -11,20 +11,8 @@
     <Setting Name="ClientsCountValue" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
-    <Setting Name="server" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">localhost</Value>
-    </Setting>
-    <Setting Name="database" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">baza</Value>
-    </Setting>
-    <Setting Name="userID" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">root</Value>
-    </Setting>
-    <Setting Name="passwd" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">Haslo123</Value>
-    </Setting>
-    <Setting Name="port" Type="System.UInt16" Scope="Application">
-      <Value Profile="(Default)">3306</Value>
+    <Setting Name="IsGameSaved" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>

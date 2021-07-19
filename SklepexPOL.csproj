@@ -71,10 +71,13 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Model\clientRandomizer.cs" />
+    <Compile Include="Model\interactions.cs" />
     <Compile Include="Model\moneyCounter.cs" />
     <Compile Include="Model\orders.cs" />
     <Compile Include="Model\shopInfo.cs" />
     <Compile Include="Model\sqlmanager.cs" />
+    <Compile Include="Model\stringConventer.cs" />
+    <Compile Include="Model\structs.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="ViewModel\BaseClass\BaseViewModel.cs" />
     <Compile Include="ViewModel\BaseClass\RelayCommand.cs" />
@@ -84,6 +87,9 @@
     </Compile>
     <Compile Include="View\game.xaml.cs">
       <DependentUpon>game.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\gameover.xaml.cs">
+      <DependentUpon>gameover.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\menu.xaml.cs">
       <DependentUpon>menu.xaml</DependentUpon>
@@ -123,6 +129,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\game.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\gameover.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -200,13 +210,13 @@
     <Resource Include="images\dokumenty.jpg" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="database\dane.sql" />
-    <Content Include="database\struktura i dane.sql" />
-    <Content Include="database\struktura.sql" />
+    <Content Include="database\baza.sql" />
     <Content Include="sounds\delivery.mp3" />
     <Content Include="sounds\beep.mp3" />
     <Content Include="sounds\cash.mp3" />
     <Content Include="sounds\bell.mp3" />
+    <Content Include="sounds\funeral.mp3" />
+    <Content Include="sounds\trombone.mp3" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
