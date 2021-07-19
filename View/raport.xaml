@@ -31,7 +31,7 @@
                 </ScrollViewer>
             </StackPanel>
         </StackPanel>
-        <StackPanel  Margin="11" Grid.Row="0" Grid.Column="1" Visibility="{Binding IsDeliveryDay}">
+        <StackPanel  Margin="11" Grid.Row="0" Grid.Column="1" Visibility="{Binding IDD}">
             <TextBlock FontSize="22" FontFamily="Arial" HorizontalAlignment="Center" Margin="10">Dzisiejsze dostawy:</TextBlock>
             <TextBlock  FontSize="20" FontFamily="Arial">Zamówienie nr 4 - Mięsopol</TextBlock>
         </StackPanel>
@@ -39,12 +39,12 @@
             <TextBlock Margin="0,0,10,0" FontSize="18" VerticalAlignment="Center">Wynagrodzenie pracowników: </TextBlock>
             <TextBlock Text="{Binding SalaryString}"  VerticalAlignment="Center" FontSize="18" FontFamily="Arial"/>
         </StackPanel>
-        <StackPanel Visibility="{Binding IsPaymentDay}"  Margin="10" Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
+        <StackPanel Visibility="{Binding IPD}"  Margin="10" Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
             <TextBlock Margin="0,0,10,0" FontSize="18" VerticalAlignment="Center">Opłaty miesięczne:</TextBlock>
             <TextBlock Text="{Binding RentValueString}" VerticalAlignment="Center" FontSize="18" FontFamily="Arial"/>
         </StackPanel>
         <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
-                    Visibility="{Binding IsAlert}"
+                    Visibility="{Binding IA}"
                     Margin="10" VerticalAlignment="Center">
             <TextBlock Text="{Binding AlertText}" HorizontalAlignment="Center" FontSize="18" FontFamily="Consolas" Foreground="Red">Istnieje możliwość zwiększenia poziomu sklepu</TextBlock>
         </StackPanel>

@@ -16,6 +16,8 @@ namespace SklepexPOL.ViewModel
     using Model;
     using View;
     using R = Properties.Settings;
+    using System.Windows.Data;
+
     class MainViewModel : BaseViewModel
     {
         //generator klientów i zakupów
@@ -28,6 +30,8 @@ namespace SklepexPOL.ViewModel
         interactions intercom = new interactions();
         //ustalanie info o sklepie ?
         //shopInfo informator = new shopInfo();
+        //struktury
+        structs structs = new structs();
 
         //uruchamianie sie aplikacji
         private ICommand hello;
@@ -40,7 +44,7 @@ namespace SklepexPOL.ViewModel
         }
         private void initialize()
         {
-            bool connection = false;
+            bool connection = true;
             //mysql - sprawdź czy jest połączenie
             //nie ma połączenia z sql
             if (!connection)
@@ -53,7 +57,7 @@ namespace SklepexPOL.ViewModel
             else
             {
                 IsSQL = true;
-                bool db = false;
+                bool db = true;
                 //mysql - sprawdź czy jest baza
                 //jeśli nie ma
                 if (!db) 
@@ -99,6 +103,141 @@ namespace SklepexPOL.ViewModel
             }
         }
 
+        #region funkcje przejścia do następnego dnia
+
+        //funkcja przechodzenia do następnego dnia
+        private async Task dayChangeAsync()
+        {
+            //mysql => odjęcie sprzedanych towarów z bazy
+
+            //zwiększenie daty o 1
+            TodayDate = TodayDate.AddDays(1);
+            //mysql => NextDay()
+            //mysql Update info set Ruch = TodayClientsValue
+
+            //zmiany w pieniądzach
+            MoneyBalance = MoneyBalance + MoneyIncome - MoneyExpense;
+
+            //sprawdzenie czy jest dzisiaj dostawa
+            //IsDeliveryDay
+
+            //słowny zapis dnia
+            TDN();
+
+            //muzyczka
+            //zmienić na to że jak będzie dostawa to ma grać
+            MediaPlayer player = new MediaPlayer();
+            if (IsDeliveryDay)
+                player.Open(new Uri(@"../../sounds/delivery.mp3", UriKind.Relative));
+            else if (MoneyBalance <= -5000)
+                player.Open(new Uri(@"../../sounds/trombone.mp3", UriKind.Relative));
+            else
+            {
+                string[] sounds = { "cash.mp3", "bell.mp3", "beep.mp3" };
+                Random random = new Random();
+                int index = random.Next(0, sounds.Length);
+                player.Open(new Uri(@"../../sounds/" + sounds[index], UriKind.Relative));
+            }
+            player.Play();
+
+            //przejście z widoku gry na widok daty
+            gameDateSwitch();
+            
+            //mysql => pobranie ilości towarów na stanie
+
+            //generowanie klientów i ich zakupów
+            TodayClientsValue = randomizer.clientsCreator(TodayClientsValue, ShopMargin, ShopState, ShopLevel, TodayDate);
+            SoldItems = randomizer.shopListGenerator(TodayClientsValue, OnHouseItems, ShopLevel, TodayDate);
+            R.Default.ClientsCountValue = TodayClientsValue;
+            R.Default.SoldItemsString = TSI();
+            R.Default.Save();
+
+            //generowanie listview na stanie - odblokować
+            DictionaryToListView();
+
+            //obliczenie dochodów ze sprzedaży - odblokować
+            //MoneyIncome = moneyManager.stonksCalc(SoldItems, ShopMargin);
+            //mysql => update info set Dochod_dzienny = MoneyIncome
+
+            //obliczenie wydatków
+            if (TodayDate.Day == 1)
+            {
+                IsPaymentDay = true;
+                MoneyExpense = EmployeesSalary * ShopEmployees + RentValue;
+            }
+            else
+            {
+                IsPaymentDay = false;
+                MoneyExpense = EmployeesSalary * ShopEmployees;
+            }
+            //mysql => update info set Wydatki_dzienne = MoneyExpense
+
+            //sprawdzenie stanu, rodzaju i poziomu sklepu
+            shopInfoUpdate();
+
+            //info o funduszach
+            if (MoneyBalance < -1000)
+            {
+                IsAlert = true;
+                AlertText = "Twój sklep przynosi straty. Jeśli jego sytuacja nie poprawi się, zostanie on zamknięty.";
+            }
+            else
+            {
+                IsAlert = false;
+            }
+            //info czy można levelować
+            if (IsLvlUp && MoneyBalance > 0)
+            {
+                IsAlert = true;
+                AlertText = "Istnieje możliwość zwiększenia poziomu sklepu.";
+            }
+            else
+            {
+                IsAlert = false;
+            }
+
+            //chwila odpoczynku
+            await Task.Delay(3000);
+
+            //przejście z daty do gry albo i nie
+
+            if (MoneyBalance <= -5000)
+            {
+                intercom.message("Komornik przesyła pozdrowienia.\nTu kończy się historia twojego sklepu.\n" +
+                    "R. I. P. " + ShopName + "\n" + OpenDate.ToString("dd/MM/yyyy") + " - " + TodayDate.ToString("dd/MM/yyyy"), "R. I. P.");
+                GameOver();
+            }
+            else
+            {
+                dateGameSwitch();
+            }
+        }
+
+        //przejście do gry z przycisku kontynuuj/po utworzeniu nowej gry
+        //zrobić na tej samej zasadzie co tą wyżej (żeby wczytywała to samo)
+        private async Task gameWindowAsync()
+        {
+            //inicjacja spisu produktów na stanie itd. - z bazy
+            double[] key = new double[] { 110, 5, 1, 1, 1, 1, 1 };
+            Dictionary<string, double[]> slownik = new Dictionary<string, double[]>();
+            slownik.Add("pomidor", key);
+            slownik.Add("ogórek", key);
+            slownik.Add("Brokuł", key);
+            OnHouseItems = slownik;
+            //Wywołanie wyświetlacza słownego dnia tygodnia
+            TDN();
+            //wczytanie z zapisu gry, co ostatnio (dzisiaj) sprzedano
+            TodaySoldItems = R.Default.SoldItemsString;
+            //zmiana widoczności okien
+            MenuVis = Visibility.Collapsed;
+            DateVis = Visibility.Visible;
+            //chwila odpoczynku
+            await Task.Delay(3000);
+            //zmiana widoczności okien
+            dateGameSwitch();
+        }
+
+        #endregion
 
         #region panel menu i gry
 
@@ -202,27 +341,6 @@ namespace SklepexPOL.ViewModel
                 return windowGame ?? new RelayCommand(prop => gameWindowAsync(), null);
             }
         } 
-        private async Task gameWindowAsync()
-        {
-            //inicjacja spisu produktów na stanie itd. - z bazy
-            double[] key = new double[] { 110, 5 };
-            Dictionary<string, double[]> slownik = new Dictionary<string, double[]>();
-            slownik.Add("pomidor", key);
-            slownik.Add("ogórek", key);
-            slownik.Add("Brokuł", key);
-            OnHouseItems = slownik;
-            //Wywołanie wyświetlacza słownego dnia tygodnia
-            TDN();
-            //wczytanie z zapisu gry, co ostatnio (dzisiaj) sprzedano
-            TodaySoldItems = R.Default.SoldItemsString;
-            //zmiana widoczności okien
-            MenuVis = Visibility.Collapsed;
-            DateVis = Visibility.Visible;
-            //chwila odpoczynku
-            await Task.Delay(3000);
-            //zmiana widoczności okien
-            dateGameSwitch();
-        }
 
         //komendy otworzenia pliku z instrukcją
         private ICommand infoPdf;
@@ -329,106 +447,6 @@ namespace SklepexPOL.ViewModel
             }
         }
 
-        //funkcja przechodzenia do następnego dnia
-        private async Task dayChangeAsync()
-        {
-            //zwiększenie daty o 1
-            TodayDate = TodayDate.AddDays(1);
-            //mysql => NextDay()
-            //mysql Update info set Ruch = TodayClientsValue
-            
-            //zmiany w pieniądzach
-            MoneyBalance = MoneyBalance + MoneyIncome - MoneyExpense;
-            
-            //sprawdzenie czy jest dzisiaj dostawa
-            //IsDeliveryDay
-
-            //słowny zapis dnia
-            TDN();
-            
-            //muzyczka
-            //zmienić na to że jak będzie dostawa to ma grać
-            MediaPlayer player = new MediaPlayer();
-            if (IsDeliveryDay)
-                player.Open(new Uri(@"../../sounds/delivery.mp3", UriKind.Relative));
-            else if(MoneyBalance<=-5000)
-                player.Open(new Uri(@"../../sounds/trombone.mp3", UriKind.Relative));
-            else
-            {
-                string[] sounds = { "cash.mp3","bell.mp3","beep.mp3"};
-                Random random = new Random();
-                int index = random.Next(0, sounds.Length);
-                player.Open(new Uri(@"../../sounds/"+sounds[index], UriKind.Relative));
-            }
-            player.Play();
-            
-            //przejście z widoku gry na widok daty
-            gameDateSwitch();
-            
-            //generowanie klientów i ich zakupów
-            TodayClientsValue = randomizer.clientsCreator(TodayClientsValue, ShopMargin, ShopState, ShopLevel, TodayDate);
-            SoldItems = randomizer.shopListGenerator(TodayClientsValue, OnHouseItems, ShopLevel, TodayDate);
-            R.Default.ClientsCountValue = TodayClientsValue;
-            R.Default.SoldItemsString = TSI();
-            R.Default.Save();
-
-            //obliczenie dochodów ze sprzedaży
-            MoneyIncome = moneyManager.stonksCalc(SoldItems, ShopMargin);
-            //mysql => update info set Dochod_dzienny = MoneyIncome
-
-            //obliczenie wydatków
-            if (TodayDate.Day == 1)
-            {
-                IsPaymentDay = true;
-                MoneyExpense = EmployeesSalary * ShopEmployees + RentValue;
-            }
-            else
-            {
-                IsPaymentDay = false;
-                MoneyExpense = EmployeesSalary * ShopEmployees;
-            }
-            //mysql => update info set Wydatki_dzienne = MoneyExpense
-
-            //sprawdzenie stanu, rodzaju i poziomu sklepu
-            shopInfoUpdate();
-
-            //info o funduszach
-            if (MoneyBalance < -1000)
-            {
-                IsAlert = true;
-                AlertText = "Twój sklep przynosi straty. Jeśli jego sytuacja nie poprawi się, zostanie on zamknięty.";
-            }
-            else 
-            {
-                IsAlert = false;
-            }
-            //info czy można levelować
-            if (IsLvlUp && MoneyBalance > 0) 
-            {
-                IsAlert = true;
-                AlertText = "Istnieje możliwość zwiększenia poziomu sklepu.";
-            }
-            else
-            {
-                IsAlert = false;
-            }
-
-            //chwila odpoczynku
-            await Task.Delay(3000);
-            
-            //przejście z daty do gry
-            
-            if (MoneyBalance <= -5000)
-            {
-                intercom.message("Komornik przesyła pozdrowienia.\nTu kończy się historia twojego sklepu.\n" +
-                    "R. I. P. " + ShopName + "\n" + OpenDate.ToString("dd/MM/yyyy") + " - " + TodayDate.ToString("dd/MM/yyyy"), "R. I. P.");
-                GameOver();
-            }
-            else { 
-                dateGameSwitch();
-            }
-        }
-
         //przejście z ekranu daty do ekranu gry
         public void dateGameSwitch()
         {
@@ -513,6 +531,62 @@ namespace SklepexPOL.ViewModel
         }
         #endregion
 
+        #region co jest na stanie
+
+        private structs.stanHandler itemsList;
+        public List<structs.stan> ItemsList
+        {
+            get { return itemsList.Items; }
+        }
+        public void DictionaryToListView()
+        {
+
+            itemsList = new structs.stanHandler();
+            //List<structs.stan> lista = new List<structs.stan>();
+            //GridView grid = new GridView();
+
+            //nagłówki listview
+            //GridViewColumn col1 = new GridViewColumn();
+            //col1.Header = "ID";
+            //col1.DisplayMemberBinding = new Binding("ID");
+            //grid.Columns.Add(col1);
+
+            //GridViewColumn col2 = new GridViewColumn();
+            //col2.Header = "Produkt";
+            //col2.DisplayMemberBinding = new Binding("Name");
+            //grid.Columns.Add(col2);
+
+            //GridViewColumn col3 = new GridViewColumn();
+            //col3.Header = "Termin ważności";
+            //col3.DisplayMemberBinding = new Binding("Days");
+            //grid.Columns.Add(col3);
+
+            //GridViewColumn col4 = new GridViewColumn();
+            //col4.Header = "Ilość";
+            //col4.DisplayMemberBinding = new Binding("Count");
+            //grid.Columns.Add(col4);
+
+            //lista.View = grid;
+
+            foreach (KeyValuePair<string, double[]> product in OnHouseItems)
+            {
+                int count = (int)(product.Value[0] - SoldItems[product.Key][0]);
+                //lista.Items.Add(new structs.stan() { ID=(int)product.Value[6], Name= product.Key, Days=(int)product.Value[4], Count=count });
+                //lista.Add(new structs.stan() { ID=(int)product.Value[6], Name= product.Key, Days=(int)product.Value[4], Count=count });
+                itemsList.Add(new structs.stan() { ID=product.Value[6].ToString(), Name= product.Key, Days=product.Value[4].ToString(), Count=count.ToString() });
+            }
+            //coś tu nie działa!!!
+            // Console.WriteLine(ItemsList.Items.Count);
+            Console.WriteLine("uuuuu");
+            //ItemsList = null;
+            //ItemsList=lista;
+            //ItemsList.Items.Refresh();
+            //onPropertyChanged(nameof(ItemsList));
+            //return lista;
+        }
+        
+        #endregion
+
         #region informacje o sklepie
 
         //nazwa sklepu
@@ -550,7 +624,7 @@ namespace SklepexPOL.ViewModel
         }
 
         //co jest na stanie - wczytać z bazy
-        //{"produkt #id_zam":[ilosc, cena, wysokość podatku, marża dostawcy, termin ważności(ile dni zostało), id_zam]}
+        //{"produkt #id_zam":[ilosc, cena, wysokość podatku, marża dostawcy, termin ważności(ile dni zostało), id_zam, id_stan]}
         private Dictionary<string, double[]> onHouseItems;
         public Dictionary<string, double[]> OnHouseItems
         {
@@ -880,6 +954,15 @@ namespace SklepexPOL.ViewModel
             {
                 isDeliveryDay = value;
                 onPropertyChanged(nameof(IsDeliveryDay));
+                onPropertyChanged(nameof(IDD));
+            }
+        }
+        public Visibility IDD
+        {
+            get
+            {
+                if (IsDeliveryDay) return Visibility.Visible;
+                else return Visibility.Collapsed;
             }
         }
 
@@ -892,6 +975,15 @@ namespace SklepexPOL.ViewModel
             {
                 isPaymentDay = value;
                 onPropertyChanged(nameof(IsPaymentDay));
+                onPropertyChanged(nameof(IPD));
+            }
+        }
+        public Visibility IPD
+        {
+            get
+            {
+                if (IsPaymentDay) return Visibility.Visible;
+                else return Visibility.Collapsed;
             }
         }
 
@@ -904,6 +996,15 @@ namespace SklepexPOL.ViewModel
             {
                 isAlert = value;
                 onPropertyChanged(nameof(IsAlert));
+                onPropertyChanged(nameof(IA));
+            }
+        }
+        public Visibility IA
+        {
+            get
+            {
+                if (IsAlert) return Visibility.Visible;
+                else return Visibility.Collapsed;
             }
         }
 

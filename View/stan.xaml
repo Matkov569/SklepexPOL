@@ -17,7 +17,16 @@
             <SolidColorBrush Color="#FFFFFBD5"/>
         </Grid.Background>
         <StackPanel Margin="10">
-            <ListView></ListView>
+            <ListView ItemsSource="{Binding ItemsList}" >
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="ID" Width="50" DisplayMemberBinding="{Binding ID}"/>
+                        <GridViewColumn Header="Produkt" Width="250" DisplayMemberBinding="{Binding Name}"/>
+                        <GridViewColumn Header="Termin ważności" Width="150" DisplayMemberBinding="{Binding Days}"/>
+                        <GridViewColumn Header="Ilość" Width="150" DisplayMemberBinding="{Binding Count}"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
         </StackPanel>
     </Grid>
 </UserControl>
