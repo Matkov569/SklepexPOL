@@ -17,6 +17,7 @@ namespace SklepexPOL.ViewModel
     using View;
     using R = Properties.Settings;
     using System.Windows.Data;
+    using System.Collections;
 
     class MainViewModel : BaseViewModel
     {
@@ -108,8 +109,6 @@ namespace SklepexPOL.ViewModel
         //funkcja przechodzenia do następnego dnia
         private async Task dayChangeAsync()
         {
-            //mysql => odjęcie sprzedanych towarów z bazy
-
             //zwiększenie daty o 1
             TodayDate = TodayDate.AddDays(1);
             //mysql => NextDay()
@@ -148,12 +147,17 @@ namespace SklepexPOL.ViewModel
             //generowanie klientów i ich zakupów
             TodayClientsValue = randomizer.clientsCreator(TodayClientsValue, ShopMargin, ShopState, ShopLevel, TodayDate);
             SoldItems = randomizer.shopListGenerator(TodayClientsValue, OnHouseItems, ShopLevel, TodayDate);
+            //mysql => odjęcie sprzedanych towarów z bazy
             R.Default.ClientsCountValue = TodayClientsValue;
             R.Default.SoldItemsString = TSI();
             R.Default.Save();
 
-            //generowanie listview na stanie - odblokować
-            DictionaryToListView();
+            //wczytanie z bazy liczby towarów na stanie
+            //OnHouseItems = ...
+
+            //generowanie listview'ów
+            OnHouseToListView(OnHouseItems);
+            DeliveriesToListView();
 
             //obliczenie dochodów ze sprzedaży - odblokować
             //MoneyIncome = moneyManager.stonksCalc(SoldItems, ShopMargin);
@@ -220,19 +224,29 @@ namespace SklepexPOL.ViewModel
             //inicjacja spisu produktów na stanie itd. - z bazy
             double[] key = new double[] { 110, 5, 1, 1, 1, 1, 1 };
             Dictionary<string, double[]> slownik = new Dictionary<string, double[]>();
+            //tu ma z bazy wczytać co jest na stanie
             slownik.Add("pomidor", key);
             slownik.Add("ogórek", key);
             slownik.Add("Brokuł", key);
             OnHouseItems = slownik;
+
             //Wywołanie wyświetlacza słownego dnia tygodnia
             TDN();
+
             //wczytanie z zapisu gry, co ostatnio (dzisiaj) sprzedano
             TodaySoldItems = R.Default.SoldItemsString;
+
             //zmiana widoczności okien
             MenuVis = Visibility.Collapsed;
             DateVis = Visibility.Visible;
+
+            //wywołanie inicjacji listview'ów
+            OnHouseToListView(slownik);
+            DeliveriesToListView();
+
             //chwila odpoczynku
             await Task.Delay(3000);
+
             //zmiana widoczności okien
             dateGameSwitch();
         }
@@ -538,53 +552,64 @@ namespace SklepexPOL.ViewModel
         {
             get { return itemsList.Items; }
         }
-        public void DictionaryToListView()
+        public void OnHouseToListView(Dictionary<string, double[]> dict)
         {
-
             itemsList = new structs.stanHandler();
-            //List<structs.stan> lista = new List<structs.stan>();
-            //GridView grid = new GridView();
-
-            //nagłówki listview
-            //GridViewColumn col1 = new GridViewColumn();
-            //col1.Header = "ID";
-            //col1.DisplayMemberBinding = new Binding("ID");
-            //grid.Columns.Add(col1);
-
-            //GridViewColumn col2 = new GridViewColumn();
-            //col2.Header = "Produkt";
-            //col2.DisplayMemberBinding = new Binding("Name");
-            //grid.Columns.Add(col2);
-
-            //GridViewColumn col3 = new GridViewColumn();
-            //col3.Header = "Termin ważności";
-            //col3.DisplayMemberBinding = new Binding("Days");
-            //grid.Columns.Add(col3);
-
-            //GridViewColumn col4 = new GridViewColumn();
-            //col4.Header = "Ilość";
-            //col4.DisplayMemberBinding = new Binding("Count");
-            //grid.Columns.Add(col4);
-
-            //lista.View = grid;
-
-            foreach (KeyValuePair<string, double[]> product in OnHouseItems)
+            foreach (KeyValuePair<string, double[]> product in dict)
             {
-                int count = (int)(product.Value[0] - SoldItems[product.Key][0]);
-                //lista.Items.Add(new structs.stan() { ID=(int)product.Value[6], Name= product.Key, Days=(int)product.Value[4], Count=count });
-                //lista.Add(new structs.stan() { ID=(int)product.Value[6], Name= product.Key, Days=(int)product.Value[4], Count=count });
-                itemsList.Add(new structs.stan() { ID=product.Value[6].ToString(), Name= product.Key, Days=product.Value[4].ToString(), Count=count.ToString() });
+                int count = (int)product.Value[0];
+                itemsList.Add(new structs.stan() { 
+                    ID=product.Value[6].ToString(), 
+                    Name= product.Key, 
+                    Days=product.Value[4].ToString(), 
+                    Count=count.ToString() });
             }
-            //coś tu nie działa!!!
-            // Console.WriteLine(ItemsList.Items.Count);
-            Console.WriteLine("uuuuu");
-            //ItemsList = null;
-            //ItemsList=lista;
-            //ItemsList.Items.Refresh();
-            //onPropertyChanged(nameof(ItemsList));
-            //return lista;
         }
-        
+
+        #endregion
+
+        #region co jest zamówione
+
+        private structs.zamowieniaHandler ordersList;
+        public List<structs.zamowienia> Deliveries
+        {
+            get { return ordersList.Items; }
+        }
+        public void DeliveriesToListView()
+        {
+            ordersList = new structs.zamowieniaHandler();
+            //wczytaj z mysql zamowienia (widok dodostarczenia)
+            //foreach (kolejne rekordy w wynikach mysql)
+            //{
+                Button btn = new Button();
+                btn.Content = "Podgląd"; 
+                btn.Command = DeliveryLook;
+                btn.CommandParameter = 0;
+                ordersList.Add(new structs.zamowienia() { 
+                    ID = "id dostawcy", 
+                    Name = "Nazwa dostawcy", 
+                    ODate = "Data zamówienia w formacie dd/MM/yyyy",
+                    DDate = "Data dostarczenia w formacie dd/MM/yyyy",
+                    Cost = "Koszt zamówienia - strConv.money(kwota)", 
+                    Action =  DeliveryLook});
+            //}
+        }
+
+        private ICommand deliveryLook;
+        public ICommand DeliveryLook
+        {
+            get
+            {
+                return deliveryLook ?? new RelayCommand(p => 
+                {
+                    Console.WriteLine("AAAAAAAA");
+                    Console.WriteLine((string)p);
+                    //mysql pobierz dane o zamówieniu z id = id
+                    //zmień te dane w stringa z przejściami \n i wywołaj intercom.message(string,"Zamówienie #"+id.ToString());
+                }, null);
+            } 
+        }
+
         #endregion
 
         #region informacje o sklepie
@@ -1376,5 +1401,6 @@ namespace SklepexPOL.ViewModel
         }
 
         #endregion
+  
     }
 }
