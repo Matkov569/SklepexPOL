@@ -244,6 +244,12 @@ namespace SklepexPOL.ViewModel
             OnHouseToListView(slownik);
             DeliveriesToListView();
 
+            //wczytanie listy sprzedawców i ich produktów
+            ListOfSellers.Add(new structs.dostawcy("1","Dostawca 1","3 dni",0.6,"Polska","Cło",0.03));
+            ListOfProducts = new structs.produktyHandler();
+            ListOfProducts.Add(new structs.produkty("1","Produkt",1.2,"VAT",0.08) );
+            ListOfListOfProducts.Add(ListOfProducts);
+
             //chwila odpoczynku
             await Task.Delay(3000);
 
@@ -526,22 +532,91 @@ namespace SklepexPOL.ViewModel
 
         #region nowe zamówienie
 
-        //podatek produktu (wczytać z bazy)
-        private double proPod;
-        public double ProPod
+        //lista dostawców
+        private structs.dostawcyHandler ListOfSellers = new structs.dostawcyHandler();
+        public List<structs.dostawcy> Sellers
         {
-            get { return proPod; }
+            get { return ListOfSellers.Items; }
+        }
+        //index wybranego dostawcy (domyślnie żaden)
+        private int lOSIndex = -1;
+        public int LOSIndex
+        {
+            get { return lOSIndex; }
             set
             {
-                proPod = value;
-                onPropertyChanged(nameof(ProPod));
-                onPropertyChanged(nameof(ProPodPer));
+                lOSIndex = value;
+                onPropertyChanged(nameof(LOSIndex));
+                //wczytywanie listy produktów danego sprzedawcy
+                if (value >= 0)
+                {
+                    ListOfProducts = ListOfListOfProducts.Item(value);
+                    IsProductsEnabled = true;
+                }
+                else
+                {
+                    ListOfProducts = null;
+                    IsProductsEnabled = false;
+                }
+                Console.WriteLine(IsProductsEnabled);
+                onPropertyChanged(nameof(ListOfProducts));
             }
         }
-        //procent podatku produktu
-        public string ProPodPer
+        //wybrany dostawca
+        private structs.dostawcy selectedSeller;
+        public structs.dostawcy SelectedSeller
         {
-            get { return strConv.percentage(ProPod); }
+            get { return selectedSeller; }
+            set
+            {
+                selectedSeller = value;
+                onPropertyChanged(nameof(SelectedSeller));
+                //onPropertyChanged(nameof(LOSIndex));
+                Console.WriteLine("AAAA");
+            }
+        }
+        
+        //lista produktów
+        private structs.produktyHandler ListOfProducts;
+        public List<structs.produkty> Products
+        {
+            get { return ListOfProducts.Items; }
+        }
+        //lista list produktów
+        private structs.produktyHandlerList ListOfListOfProducts = new structs.produktyHandlerList();
+        //wybrany produkt
+        private structs.produkty selectedProduct;
+        public structs.produkty SelectedProduct
+        {
+            get { return selectedProduct; }
+            set{
+                selectedProduct = value;
+                onPropertyChanged(nameof(SelectedProduct));
+            }
+        }
+
+        //czy combobox jest odblokowany
+        private bool isProductsEnabled;
+        public bool IsProductsEnabled
+        {
+            get { return isProductsEnabled; }
+            set
+            {
+                isProductsEnabled = value;
+                onPropertyChanged(nameof(IsProductsEnabled));
+            }
+        }
+
+        //indeks wybranego produktu
+        private int selectedProductIndex = -1;
+        public int SelectedProductIndex
+        {
+            get { return selectedProductIndex; }
+            set
+            {
+                selectedProductIndex = value;
+                onPropertyChanged(nameof(SelectedProductIndex));
+            }
         }
 
         //czy można zmienić dostawce - zależy od tego czy w liście jest jakaś pozycja czy nie
@@ -555,12 +630,67 @@ namespace SklepexPOL.ViewModel
 
         }
 
+        //matematyka
+        //ilość produktu
+        private string productCount;
+        public int ProductCount
+        {
+            get {
+                if (productCount != null && productCount != "") return int.Parse(productCount);
+                else return 0;
+            }
+        }
+        public string ProductCountS
+        {
+            get { return productCount; }
+            set
+            {
+                productCount = value;
+                onPropertyChanged(nameof(ProductCount));
+                onPropertyChanged(nameof(ProductCountS));
+                if (productCount != null)
+                {
+                    onPropertyChanged(nameof(ProductCost));
+                    onPropertyChanged(nameof(ProductTaxes));
+                    onPropertyChanged(nameof(ProductSum));
+                }
+            }
+        }
+
+        //cena produktów
+        public string ProductCost
+        {
+            //netto = ilosć x cena 
+            get { return strConv.money(ProductCount * SelectedProduct.PriceV); }
+        } 
+        
+        //kwota podatków
+        public string ProductTaxes
+        {
+            //tara = ilosć x cena x ((1+marża ( 1+ cło + pod) - 1))
+            get { return strConv.money(ProductCount * SelectedProduct.PriceV * ((1 + SelectedSeller.MarginV) * (1 + (SelectedSeller.TaxValue) + (SelectedProduct.TaxValue)) - 1)); }
+        }
+
+        //suma
+        public string ProductSum
+        {
+            //brutto = ilosć x cena x (1+marża ( 1+ 1+cło + 1+pod))
+            get { return strConv.money(ProductCount * SelectedProduct.PriceV * ((1 + SelectedSeller.MarginV) * (1 + (SelectedSeller.TaxValue) + (SelectedProduct.TaxValue)))); }
+        }
+
+        //koszt zamówienia
+        public string OrderCost
+        {
+            get { return strConv.money(cartList.CostSum()); }
+        }
+
+        //pozycje zamówienia
         private structs.noweHandler cartList = new structs.noweHandler();
         public List<structs.nowe> ShoppingCart
         {
             get { return cartList.Items; }
         }
-        public void DeliveriesToListView()
+        /*public void DeliveriesToListView()
         {
             var x = cartList.Item(0);
             //wczytaj z mysql zamowienia (widok dodostarczenia)
@@ -572,43 +702,17 @@ namespace SklepexPOL.ViewModel
             btn.CommandParameter = 0;
             ordersList.Add(new structs.zamowienia()
             {
-                ID = "id dostawcy",
-                Name = "Nazwa dostawcy",
-                ODate = "Data zamówienia w formacie dd/MM/yyyy",
-                DDate = "Data dostarczenia w formacie dd/MM/yyyy",
-                Cost = "Koszt zamówienia - strConv.money(kwota)",
-                Action = DeliveryLook
+                ID = "id produktu",
+                Name = "Nazwa produktu",
+                Count = ilość (int),
+                Cost = strConv.money(_price),
+                Price = Koszt zamówienia (double),
+                Action = akcja
             });
             //}
         }
+*/
 
-        //wybrany index
-        private int shoppingListIndex;
-        public int ShoppingListIndex
-        {
-            get { return shoppingListIndex; }
-            set
-            {
-                shoppingListIndex = value;
-                onPropertyChanged(nameof(ShoppingListIndex));
-                readFromList(value);
-            }
-        }
-
-        private void readFromList(int index)
-        {
-            //nic nie wybrano
-            if(index == -1)
-            {
-                //wszystko puste
-            }
-            else
-            {
-                structs.nowe x = cartList.Item(index);
-                //przypisanie zmiennych
-            }
-
-        }
 
         #endregion
 

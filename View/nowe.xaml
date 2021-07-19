@@ -37,30 +37,38 @@
                     VerticalAlignment="Center" HorizontalAlignment="Left"
                     Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2">
             <TextBlock Margin="0,0,10,0" FontWeight="Bold">Dostawca:</TextBlock>
-            <ComboBox IsEnabled="{Binding DeliveryEnabled}" Width="375"
-                      SelectedIndex="{Binding}" SelectionChanged="{Binding }"
-                      />
+            <ComboBox IsEnabled="{Binding DeliveryEnabled}" Width="375" x:Name="sellerBox"
+                      ItemsSource="{Binding Sellers}" SelectedItem="{Binding SelectedSeller}"
+                      SelectedIndex="{Binding LOSIndex}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <!-- -->
+                      
         </StackPanel>
         <!--Info o dostawcy-->
         <StackPanel Margin="10" Grid.Row="2" Grid.Column="0">
             <StackPanel Margin="0,0,0,10">
-                <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
+                <TextBlock HorizontalAlignment="Center" Text="{Binding SelectedSeller.Margin}"/>
                 <TextBlock HorizontalAlignment="Center" FontWeight="Bold">Marża dostawcy</TextBlock>
             </StackPanel>
             <StackPanel Margin="0,5">
-                <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
+                <TextBlock HorizontalAlignment="Center" Text="{Binding SelectedSeller.DDays}"/>
                 <TextBlock HorizontalAlignment="Center" FontWeight="Bold">Czas dostawy</TextBlock>
             </StackPanel>
             <StackPanel Margin="0,5">
-                <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
+                <TextBlock HorizontalAlignment="Center" Text="{Binding SelectedSeller.Country}"/>
                 <TextBlock HorizontalAlignment="Center" FontWeight="Bold">Kraj dostawcy</TextBlock>
             </StackPanel>
             <StackPanel Margin="0,5">
-                <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
+                <TextBlock HorizontalAlignment="Center" Text="{Binding SelectedSeller.TaxName}"/>
                 <TextBlock HorizontalAlignment="Center" FontWeight="Bold">Cło</TextBlock>
             </StackPanel>
             <StackPanel Margin="0,5">
-                <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
+                <TextBlock HorizontalAlignment="Center" Text="{Binding SelectedSeller.TaxCost}"/>
                 <TextBlock HorizontalAlignment="Center" FontWeight="Bold">Wysokość cła</TextBlock>
             </StackPanel>
             <StackPanel>
@@ -72,26 +80,36 @@
         <StackPanel Margin="10" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Margin="13,0,10,0" FontWeight="Bold">Produkt:</TextBlock>
-                <ComboBox Width="375" ItemsSource="{Binding}" 
-                          SelectedIndex="{Binding}"
-                          SelectionChanged="{Binding}"/>
+                <ComboBox x:Name="productsBox" Width="375" 
+                          ItemsSource="{Binding Products}" 
+                          SelectedItem="{Binding SelectedProduct}"
+                          IsEnabled="{Binding IsProductsEnabled}"
+                          SelectedIndex="{Binding SelectedProductIndex}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <!-- SelectionChanged="{Binding}"-->
             </StackPanel>
         </StackPanel>
         <StackPanel Margin="10" Grid.Row="2" Grid.Column="1">
             <StackPanel Orientation="Horizontal" Margin="10" HorizontalAlignment="Center">
                 <TextBlock Margin="0,0,10,0" FontWeight="Bold">Ilość:</TextBlock>
-                <TextBox PreviewTextInput="IntValidator" Width="60" MaxLength="4" Text="{Binding}"/>
+                <TextBox PreviewTextInput="IntValidator" Width="60" MaxLength="4" 
+                         x:Name="CountBox" Text="{Binding ProductCountS, UpdateSourceTrigger=PropertyChanged}" FontSize="18"/>
             </StackPanel>
             <StackPanel Margin="0,10">
-                <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
+                <TextBlock HorizontalAlignment="Center" Text="{Binding SelectedProduct.Price}"/>
                 <TextBlock HorizontalAlignment="Center" FontWeight="Bold">Cena netto</TextBlock>
             </StackPanel>
             <StackPanel Margin="0,10">
-                <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
+                <TextBlock HorizontalAlignment="Center" Text="{Binding SelectedProduct.TaxName}"/>
                 <TextBlock HorizontalAlignment="Center" FontWeight="Bold">Podatek</TextBlock>
             </StackPanel>
             <StackPanel Margin="0,10">
-                <TextBlock HorizontalAlignment="Center" Text="{Binding ProPodPer}"/>
+                <TextBlock HorizontalAlignment="Center" Text="{Binding SelectedProduct.TaxCost}"/>
                 <TextBlock HorizontalAlignment="Center" FontWeight="Bold">Wysokość podatku</TextBlock>
             </StackPanel>
         </StackPanel>
@@ -115,37 +133,36 @@
                         </GridViewColumn>
                     </GridView>
                 </ListView.View>
-                <ListViewItem>asd</ListViewItem>
             </ListView>
         </StackPanel>
         <!--buttony-->
         <StackPanel Grid.Row="4" Grid.Column="1" 
                     Orientation="Horizontal" VerticalAlignment="Center" 
                     HorizontalAlignment="Right" Margin="10,0">
-            <Button Command="{Binding}">Dodaj</Button>
+            <Button Command="{Binding}" CommandParameter="{Binding ElementName=CountBox, Path=Text}">Dodaj</Button>
         </StackPanel>
         <!--matematyka-->
         <StackPanel Margin="0,10" Grid.Row="3" Grid.ColumnSpan="2" Grid.Column="0">
             <StackPanel Orientation="Horizontal">
                 <TextBlock HorizontalAlignment="Center" FontWeight="Bold" Margin="10,0">Koszt:</TextBlock>
-                <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
+                <TextBlock HorizontalAlignment="Center" Text="{Binding ProductCost}"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <TextBlock HorizontalAlignment="Center" FontWeight="Bold" Margin="10,0">Marża i podatki:</TextBlock>
-                <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
+                <TextBlock HorizontalAlignment="Center" Text="{Binding ProductTaxes}"/>
             </StackPanel>
         </StackPanel>
         <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" VerticalAlignment="Center" Width="410">
             <StackPanel Orientation="Horizontal">
                 <TextBlock HorizontalAlignment="Center" FontWeight="Bold" Margin="10,0">Suma:</TextBlock>
-                <TextBlock HorizontalAlignment="Center" Text="{Binding}"/>
+                <TextBlock HorizontalAlignment="Center" Text="{Binding ProductSum}"/>
             </StackPanel>
         </StackPanel>
         <!--kwota zamówienia i przycisk złożenia zamówienia-->
         <StackPanel Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" Margin="10">
             <StackPanel Orientation="Horizontal" Margin="0,0,10,0">
                 <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold">Kwota zamówienia:</TextBlock>
-                <TextBlock VerticalAlignment="Center" Margin="0,0,10,0" Width="285"  Text="{Binding}"/>
+                <TextBlock VerticalAlignment="Center" Margin="0,0,10,0" Width="285"  Text="{Binding OrderCost}"/>
             </StackPanel>
         </StackPanel>
         <StackPanel Grid.Row="4" Grid.Column="2" Margin="10,0" Orientation="Horizontal" HorizontalAlignment="Right">
