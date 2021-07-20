@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 
-namespace Znajomi.DAL
+namespace SklepexPOL.DAL
 {
     class DBConnection
     {
@@ -31,7 +31,7 @@ namespace Znajomi.DAL
             stringBuilder.Server = Properties.Settings.Default.server;
             stringBuilder.Database = Properties.Settings.Default.database;
             stringBuilder.Port = Properties.Settings.Default.port;
-            stringBuilder.Password = Properties.Settings.Default.paswd;
+            stringBuilder.Password = Properties.Settings.Default.passwd;
         }
     }
 }
