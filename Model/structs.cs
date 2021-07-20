@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,10 +31,10 @@ namespace SklepexPOL.Model
         {
             public stanHandler()
             {
-                Items = new List<stan>();
+                Items = new ObservableCollection<stan>();
             }
 
-            public List<stan> Items { get; private set; }
+            public ObservableCollection<stan> Items { get; private set; }
 
             public void Add(stan item)
             {
@@ -44,17 +45,17 @@ namespace SklepexPOL.Model
         public struct nowe
         {
             public int ID { get; set; }
-            public string Name { get; set; }
+            public string PName { get; set; }
             public int Count { get; set; }
             //koszt całkowity, nie jednostkowy!
             public string Cost { get; set; }
             public double Price { get; set; }
             public ICommand Action { get; set; }
-            public nowe(int _id, string _name, int _count, double _price, ICommand _action)
+            public nowe(int _id, string _pname, int _count, double _price, ICommand _action)
             {
                 stringConventer strConv = new stringConventer();
                 ID = _id;
-                Name = _name;
+                PName = _pname;
                 Count = _count;
                 Cost = strConv.money(_price);
                 Price = _price;
@@ -65,10 +66,10 @@ namespace SklepexPOL.Model
         {
             public noweHandler()
             {
-                Items = new List<nowe>();
+                Items = new ObservableCollection<nowe>();
             }
 
-            public List<nowe> Items { get; private set; }
+            public ObservableCollection<nowe> Items { get; private set; }
             public void Add(nowe item)
             {
                 Items.Add(item);
@@ -77,15 +78,27 @@ namespace SklepexPOL.Model
             {
                 Items.Remove(item);
             }
+            public void Remove(int id)
+            {
+                Items.Remove(Items.Single(r => r.ID == id));
+            }
             public void Clear()
             {
                 Items.Clear();
             }
             public nowe Item(int index)
             {
-                if (index < Items.Count)
+                if (index < Items.Count && index >=0)
                     return Items[index];
                 else return default(nowe);
+            }
+            public bool ItemExist(int index)
+            {
+                foreach(var item in Items)
+                {
+                    if (item.ID == index) return true;
+                }
+                return false;
             }
             public int Count()
             {
@@ -97,6 +110,15 @@ namespace SklepexPOL.Model
                 foreach (nowe item in Items)
                 {
                     ret += item.Price;
+                }
+                return ret;
+            }
+            public double SpaceSum()
+            {
+                double ret = 0;
+                foreach (nowe item in Items)
+                {
+                    ret += item.Count;
                 }
                 return ret;
             }
@@ -124,10 +146,10 @@ namespace SklepexPOL.Model
         {
             public zamowieniaHandler()
             {
-                Items = new List<zamowienia>();
+                Items = new ObservableCollection<zamowienia>();
             }
 
-            public List<zamowienia> Items { get; private set; }
+            public ObservableCollection<zamowienia> Items { get; private set; }
 
             public void Add(zamowienia item)
             {
@@ -137,21 +159,23 @@ namespace SklepexPOL.Model
         //lista dostawców
         public struct dostawcy
         {
-            public string ID { get; set; }
+            public int ID { get; set; }
             public string Name { get; set; }
             public string DDays { get; set; }
+            public int DDaysV { get; set; }
             public string Margin { get; set; }
             public double MarginV { get; set; }
             public string Country { get; set; }
             public string TaxName { get; set; }
             public string TaxCost { get; set; }
             public double TaxValue { get; set; }
-            public dostawcy(string _id, string _name, string _ddays, double _marginv, string _country, string _taxname, double _taxvalue)
+            public dostawcy(int _id, string _name, int _ddaysv, double _marginv, string _country, string _taxname, double _taxvalue)
             {
                 stringConventer strConv = new stringConventer();
                 ID = _id;
                 Name = _name;
-                DDays = _ddays;
+                DDays = _ddaysv.ToString() + " dni";
+                DDaysV = _ddaysv;
                 Margin = strConv.percentage(_marginv);
                 MarginV = _marginv;
                 Country = _country;
@@ -164,10 +188,10 @@ namespace SklepexPOL.Model
         {
             public dostawcyHandler()
             {
-                Items = new List<dostawcy>();
+                Items = new ObservableCollection<dostawcy>();
             }
 
-            public List<dostawcy> Items { get; private set; }
+            public ObservableCollection<dostawcy> Items { get; private set; }
 
             public void Add(dostawcy item)
             {
@@ -177,14 +201,14 @@ namespace SklepexPOL.Model
         //lista produktów
         public struct produkty
         {
-            public string ID { get; set; }
+            public int ID { get; set; }
             public string Name { get; set; }
             public string Price { get; set; }
             public double PriceV { get; set; }
             public string TaxName { get; set; }
             public string TaxCost { get; set; }
             public double TaxValue { get; set; }
-            public produkty(string _id, string _name, double _pricev, string _taxname, double _taxvalue)
+            public produkty(int _id, string _name, double _pricev, string _taxname, double _taxvalue)
             {
                 stringConventer strConv = new stringConventer();
                 ID = _id;
@@ -200,10 +224,17 @@ namespace SklepexPOL.Model
         {
             public produktyHandler()
             {
-                Items = new List<produkty>();
+                Items = new ObservableCollection<produkty>();
             }
 
-            public List<produkty> Items { get; private set; }
+            public produkty Item(int index)
+            {
+                if (index < Items.Count && index >= 0)
+                    return Items[index];
+                else return default(produkty);
+            }
+
+            public ObservableCollection<produkty> Items { get; private set; }
 
             public void Add(produkty item)
             {
@@ -215,10 +246,10 @@ namespace SklepexPOL.Model
         {
             public produktyHandlerList()
             {
-                Items = new List<produktyHandler>();
+                Items = new ObservableCollection<produktyHandler>();
             }
 
-            public List<produktyHandler> Items { get; private set; }
+            public ObservableCollection<produktyHandler> Items { get; private set; }
 
             public void Add(produktyHandler item)
             {
@@ -227,7 +258,7 @@ namespace SklepexPOL.Model
 
             public produktyHandler Item(int index)
             {
-                return index < Items.Count ? Items[index] : default(produktyHandler);
+                return index < Items.Count && index >= 0 ? Items[index] : default(produktyHandler);
             }
         }
     }

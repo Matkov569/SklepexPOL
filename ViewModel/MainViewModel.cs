@@ -18,6 +18,7 @@ namespace SklepexPOL.ViewModel
     using R = Properties.Settings;
     using System.Windows.Data;
     using System.Collections;
+    using System.Collections.ObjectModel;
 
     class MainViewModel : BaseViewModel
     {
@@ -245,9 +246,9 @@ namespace SklepexPOL.ViewModel
             DeliveriesToListView();
 
             //wczytanie listy sprzedawców i ich produktów
-            ListOfSellers.Add(new structs.dostawcy("1","Dostawca 1","3 dni",0.6,"Polska","Cło",0.03));
+            ListOfSellers.Add(new structs.dostawcy(1,"Dostawca 1",3,0.6,"Polska","Cło",0.03));
             ListOfProducts = new structs.produktyHandler();
-            ListOfProducts.Add(new structs.produkty("1","Produkt",1.2,"VAT",0.08) );
+            ListOfProducts.Add(new structs.produkty(1,"Produkt",1.2,"VAT",0.08));
             ListOfListOfProducts.Add(ListOfProducts);
 
             //chwila odpoczynku
@@ -534,7 +535,7 @@ namespace SklepexPOL.ViewModel
 
         //lista dostawców
         private structs.dostawcyHandler ListOfSellers = new structs.dostawcyHandler();
-        public List<structs.dostawcy> Sellers
+        public ObservableCollection<structs.dostawcy> Sellers
         {
             get { return ListOfSellers.Items; }
         }
@@ -558,7 +559,6 @@ namespace SklepexPOL.ViewModel
                     ListOfProducts = null;
                     IsProductsEnabled = false;
                 }
-                Console.WriteLine(IsProductsEnabled);
                 onPropertyChanged(nameof(ListOfProducts));
             }
         }
@@ -578,7 +578,7 @@ namespace SklepexPOL.ViewModel
         
         //lista produktów
         private structs.produktyHandler ListOfProducts;
-        public List<structs.produkty> Products
+        public ObservableCollection<structs.produkty> Products
         {
             get { return ListOfProducts.Items; }
         }
@@ -616,6 +616,15 @@ namespace SklepexPOL.ViewModel
             {
                 selectedProductIndex = value;
                 onPropertyChanged(nameof(SelectedProductIndex));
+                if (value >= 0)
+                {
+                    SelectedProduct = ListOfProducts.Item(value);
+                }
+                else
+                {
+                    SelectedProduct = default(structs.produkty);
+                }
+                onPropertyChanged(nameof(SelectedProduct));
             }
         }
 
@@ -661,65 +670,174 @@ namespace SklepexPOL.ViewModel
         public string ProductCost
         {
             //netto = ilosć x cena 
-            get { return strConv.money(ProductCount * SelectedProduct.PriceV); }
+            get { return strConv.money(ProductCostV); }
+        } 
+        public double ProductCostV
+        {
+            //netto = ilosć x cena 
+            get { return Math.Round(ProductCount * SelectedProduct.PriceV, 2); }
         } 
         
         //kwota podatków
         public string ProductTaxes
         {
             //tara = ilosć x cena x ((1+marża ( 1+ cło + pod) - 1))
-            get { return strConv.money(ProductCount * SelectedProduct.PriceV * ((1 + SelectedSeller.MarginV) * (1 + (SelectedSeller.TaxValue) + (SelectedProduct.TaxValue)) - 1)); }
+            get { return strConv.money(ProductTaxesV); }
+        }
+        public double ProductTaxesV
+        {
+            //tara = ilosć x cena x ((1+marża ( 1+ cło + pod) - 1))
+            get { return Math.Round(ProductCount * SelectedProduct.PriceV * ((1 + SelectedSeller.MarginV) * (1 + (SelectedSeller.TaxValue) + (SelectedProduct.TaxValue)) - 1), 2); }
         }
 
         //suma
         public string ProductSum
         {
             //brutto = ilosć x cena x (1+marża ( 1+ 1+cło + 1+pod))
-            get { return strConv.money(ProductCount * SelectedProduct.PriceV * ((1 + SelectedSeller.MarginV) * (1 + (SelectedSeller.TaxValue) + (SelectedProduct.TaxValue)))); }
+            get { return strConv.money(ProductSumV); }
+        }
+        public double ProductSumV
+        {
+            //brutto = ilosć x cena x (1+marża ( 1+ 1+cło + 1+pod))
+            get { return Math.Round(ProductCount * SelectedProduct.PriceV * ((1 + SelectedSeller.MarginV) * (1 + (SelectedSeller.TaxValue) + (SelectedProduct.TaxValue))), 2); }
         }
 
         //koszt zamówienia
         public string OrderCost
         {
-            get { return strConv.money(cartList.CostSum()); }
+            get { return strConv.money(OrderCostV); }
+        }
+        public double OrderCostV
+        {
+            get { return Math.Round(cartList.CostSum(), 2); }
         }
 
         //pozycje zamówienia
         private structs.noweHandler cartList = new structs.noweHandler();
-        public List<structs.nowe> ShoppingCart
+        public ObservableCollection<structs.nowe> ShoppingCart
         {
             get { return cartList.Items; }
         }
-        /*public void DeliveriesToListView()
+
+        //dodawanie pozycji zamówienia
+        private ICommand orderAddPosition;
+        public ICommand OrderAddPosition
         {
-            var x = cartList.Item(0);
-            //wczytaj z mysql zamowienia (widok dodostarczenia)
-            //foreach (kolejne rekordy w wynikach mysql)
-            //{
-            Button btn = new Button();
-            btn.Content = "Podgląd";
-            btn.Command = DeliveryLook;
-            btn.CommandParameter = 0;
-            ordersList.Add(new structs.zamowienia()
+            get
             {
-                ID = "id produktu",
-                Name = "Nazwa produktu",
-                Count = ilość (int),
-                Cost = strConv.money(_price),
-                Price = Koszt zamówienia (double),
-                Action = akcja
-            });
-            //}
+                return orderAddPosition ?? new RelayCommand(p => 
+                {   
+                    var item = SelectedProduct;
+                    double price = Math.Round(ProductCount * item.PriceV * ((1 + SelectedSeller.MarginV) * (1 + (SelectedSeller.TaxValue) + (item.TaxValue))), 2);
+                    cartList.Add(new structs.nowe(item.ID, item.Name, ProductCount, price, OrderRemovePosition));
+                    onPropertyChanged(nameof(cartList));
+                    onPropertyChanged(nameof(ShoppingCart));
+                    onPropertyChanged(nameof(DeliveryEnabled));
+                    ProductCountS = "";
+                }, arg => 
+                //wpisano liczbe większą niż 0 w ilości
+                ProductCountS != null &&
+                ProductCountS != "" &&
+                ProductCount > 0 &&
+                //wybrano dostawce
+                LOSIndex >= 0 &&
+                //wybrano produkt
+                SelectedProductIndex >= 0 &&
+                //produkt nie jest już dodany do listy
+                cartList.ItemExist(SelectedProduct.ID) == false
+                );
+            }
         }
-*/
 
+        //usuwanie pozycji zamówienia
+        private ICommand orderRemovePosition;
+        public ICommand OrderRemovePosition
+        {
+            get
+            {
+                return orderRemovePosition ?? new RelayCommand(p => 
+                {
+                    cartList.Remove((int)p);
+                    onPropertyChanged(nameof(cartList));
+                    onPropertyChanged(nameof(ShoppingCart));
+                    onPropertyChanged(nameof(DeliveryEnabled));
+                },null);
+            }
+        }
 
+        //usuwanie wszystkich pozycji w zamówieniu
+        private ICommand orderClear;
+        public ICommand OrderClear
+        {
+            get
+            {
+                return orderClear ?? new RelayCommand(p =>
+                {
+                    cartList.Clear();
+                    onPropertyChanged(nameof(cartList));
+                    onPropertyChanged(nameof(cartList));
+                    onPropertyChanged(nameof(ShoppingCart));
+                    onPropertyChanged(nameof(DeliveryEnabled));
+
+                }, arg => cartList.Items.Count > 0);
+            }
+        }
+
+        //składanie zamówienia
+        private ICommand orderSubmit;
+        public ICommand OrderSubmit
+        {
+            get
+            {
+                return orderSubmit ?? new RelayCommand(p => checkOrder(), arg => cartList.Items.Count > 0);
+            }
+        }
+
+        private void checkOrder()
+        {
+            if (OrderCostV > MoneyBalance)
+            {
+                if (intercom.YesOrNo("Masz zbyt mało pieniędzy na koncie, żeby złożyć to zamówienie.\n" +
+                    "Czy chcesz je złożyć mimo to?\n" +
+                    "(Zbyt wielki ujemny stan konta (dług) może doprowadzić to zamknięcia twojego sklepu!)",
+                    "Za mało pieniędzy na koncie!"))
+                {
+                    SubmitOrder();
+                }
+            }
+            else if (cartList.SpaceSum() > (StorageSize - (ReservedStorageSpace + StorageValue)))
+            {
+                if (intercom.YesOrNo("Masz zbyt mało miejsca w magazynie, żeby złożyć to zamówienie.\n" +
+                    "Czy chcesz je złożyć mimo to?\n" +
+                    "(Do czasu przyjazdu zamówienia może zwolnić się nieco miejsca, jednak w przypadku gdy tego miejsca zabraknie - towar zostanie zniszczony!)",
+                    "Za mało miejsca w magazynie!"))
+                {
+                    SubmitOrder();
+                }
+            }
+            else
+                SubmitOrder();
+        }
+
+        private void SubmitOrder()
+        {
+
+            //mysql => insert into zamowienia ... Data dostarczenia = dzisiaj + czas dostawy + 1 (jutro wyślą dopiero) 
+            //najlepiej foreach (var item in cartList){query = insert into pro_zam values (...)}
+            ordersList.Add(new structs.zamowienia("id uzyskane z mysql",
+                SelectedSeller.Name,
+                TodayDate.ToString("dd/MM/yyyy"),
+                DateTime.Now.AddDays(SelectedSeller.DDaysV+1).ToString("dd/MM/yyyy"),
+                strConv.money(cartList.CostSum()),
+                DeliveryLook));
+            OrderClear.Execute(null);
+        }
         #endregion
 
         #region co jest na stanie
 
         private structs.stanHandler itemsList;
-        public List<structs.stan> ItemsList
+        public ObservableCollection<structs.stan> ItemsList
         {
             get { return itemsList.Items; }
         }
@@ -742,7 +860,7 @@ namespace SklepexPOL.ViewModel
         #region co jest zamówione
 
         private structs.zamowieniaHandler ordersList;
-        public List<structs.zamowienia> Deliveries
+        public ObservableCollection<structs.zamowienia> Deliveries
         {
             get { return ordersList.Items; }
         }
@@ -773,8 +891,6 @@ namespace SklepexPOL.ViewModel
             {
                 return deliveryLook ?? new RelayCommand(p => 
                 {
-                    Console.WriteLine("AAAAAAAA");
-                    Console.WriteLine((string)p);
                     //mysql pobierz dane o zamówieniu z id = id
                     //zmień te dane w stringa z przejściami \n i wywołaj intercom.message(string,"Zamówienie #"+id.ToString());
                 }, null);
@@ -1110,6 +1226,17 @@ namespace SklepexPOL.ViewModel
         public string StorageSpace
         {
             get { return StorageValue.ToString() + "/" + StorageSize.ToString(); }
+        }
+        //zarezerwowana pojemność magazynu
+        private int reservedStorageSpace;
+        public int ReservedStorageSpace
+        {
+            get { return reservedStorageSpace; }
+            set
+            {
+                reservedStorageSpace = value;
+                onPropertyChanged(nameof(ReservedStorageSpace));
+            }
         }
 
         //wysokość opłat miesięcznych
