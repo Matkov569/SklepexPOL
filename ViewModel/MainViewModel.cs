@@ -205,6 +205,8 @@ namespace SklepexPOL.ViewModel
                         "Regresja sklepu");
                     ShopLevel -= 1;
                     R.Default.LvlDays = 0;
+                    R.Default.warning = true;
+
                 }
                 
                 //mysql zmniejsz wartość lvl
