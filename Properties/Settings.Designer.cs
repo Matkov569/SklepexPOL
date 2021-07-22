@@ -114,5 +114,29 @@ namespace SklepexPOL.Properties {
                 return ((ushort)(this["port"]));
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int LvlDays {
+            get {
+                return ((int)(this["LvlDays"]));
+            }
+            set {
+                this["LvlDays"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool warning {
+            get {
+                return ((bool)(this["warning"]));
+            }
+            set {
+                this["warning"] = value;
+            }
+        }
     }
 }

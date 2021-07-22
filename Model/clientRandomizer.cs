@@ -85,6 +85,7 @@ namespace SklepexPOL.Model
                 else return 1.000001;
             }
         }
+        
         //współczynnik stanu sklepu
         private double stateDeppender(int state, int level, int clients)
         {
@@ -101,6 +102,7 @@ namespace SklepexPOL.Model
             //świetny
             else return 1.03;
         }
+        
         //współczynnik poziomu sklepu
         private double lvlDeppender(int level)
         {
@@ -112,6 +114,7 @@ namespace SklepexPOL.Model
             else if (level == 5) return 1.0004;
             else return 0;
         }
+        
         //współczynnik dnia tygodnia, wypłaty i świąt
         private double dayDeppender(DateTime date)
         {
@@ -219,6 +222,7 @@ namespace SklepexPOL.Model
         private int holidayCustomers = 0;
         private int weekCustomers = 0;
         private int paydayCustomers = 0;
+        private int extraCustomers = 0;
 
         //generowanie liczby klientów
         public int clientsCreator(int clients, double margin, int state, int level, DateTime date)
@@ -226,7 +230,7 @@ namespace SklepexPOL.Model
             double k = clients;
             double[] wsp = dayDep(date);
             //Console.WriteLine(wsp[0]+" "+wsp[1]+" "+wsp[2]);
-            int clientel = clients - holidayCustomers - weekCustomers - paydayCustomers;
+            int clientel = clients - holidayCustomers - weekCustomers - paydayCustomers + extraCustomers;
             k = k * stateDeppender(state, level, clientel) * marginDeppender(margin, level);
             int holi = (int)(clientel * wsp[1])/3;
             int week = (int)(clientel * wsp[2])/3;
@@ -234,10 +238,30 @@ namespace SklepexPOL.Model
             holidayCustomers = holi;
             weekCustomers = week;
             paydayCustomers = payd;
+
+            //sprawdzenie maksymalnej liczby klientów
+            if (k + holi + week + payd > maxClients(level))
+                extraCustomers = (int)(k + holi + week + payd) - maxClients(level);
+            else
+                extraCustomers = 0;
+
+            k -= extraCustomers;
+
             k += holi;
             k += week;
             k += payd;
             return (int)k;
+        }
+
+        //maksymalna liczba klientów
+        private int maxClients(int level)
+        {
+            if (level == 1) return 100;
+            else if (level == 2) return 500;
+            else if (level == 3) return 1200;
+            else if (level == 4) return 10000;
+            else if (level == 5) return 100000;
+            else return 100;
         }
 
     }

@@ -113,9 +113,9 @@ namespace SklepexPOL.Model
                 }
                 return ret;
             }
-            public double SpaceSum()
+            public int SpaceSum()
             {
-                double ret = 0;
+                int ret = 0;
                 foreach (nowe item in Items)
                 {
                     ret += item.Count;

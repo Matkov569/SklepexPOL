@@ -178,7 +178,37 @@ namespace SklepexPOL.ViewModel
             //mysql => update info set Wydatki_dzienne = MoneyExpense
 
             //sprawdzenie stanu, rodzaju i poziomu sklepu
+            int oldType = ShopType;
             shopInfoUpdate();
+            if(ShopType != oldType)
+            {
+                //mysql - zmień typ sklepu
+            }
+
+            //sprawdzenie czy sklep nie powinien mieć obniżonego poziomu
+            if (R.Default.LvlDays == 7)
+            {
+                if (R.Default.warning)
+                {
+                    intercom.message("Twój sklep się stoczył.\n" +
+                        "Tu kończy się historia twojego sklepu.\n" +
+                        "R. I. P. " + ShopName + "\n" + 
+                        OpenDate.ToString("dd/MM/yyyy") + " - " + TodayDate.ToString("dd/MM/yyyy"), 
+                        "R. I. P.");
+                    GameOver();
+                }
+                else
+                {
+                    intercom.message("Twój sklep przez 7 dni nie spełniał wymogów swojego poziomu.\n" +
+                        "Jego poziom zostaje obniżony.\n\n" +
+                        "Jeśli ta sytuacja powtórzy się, twój sklep zostanie zamknięty",
+                        "Regresja sklepu");
+                    ShopLevel -= 1;
+                    R.Default.LvlDays = 0;
+                }
+                
+                //mysql zmniejsz wartość lvl
+            }
 
             //info o funduszach
             if (MoneyBalance < -1000)
@@ -821,7 +851,7 @@ namespace SklepexPOL.ViewModel
 
         private void SubmitOrder()
         {
-
+            ReservedStorageSpace += cartList.SpaceSum();
             //mysql => insert into zamowienia ... Data dostarczenia = dzisiaj + czas dostawy + 1 (jutro wyślą dopiero) 
             //najlepiej foreach (var item in cartList){query = insert into pro_zam values (...)}
             ordersList.Add(new structs.zamowienia("id uzyskane z mysql",
@@ -945,6 +975,19 @@ namespace SklepexPOL.ViewModel
             {
                 onHouseItems = value;
                 onPropertyChanged(nameof(OnHouseItems));
+            }
+        }
+
+        //informacja o ilościach kategorii i produktów
+        // {id_kat : count()}
+        private Dictionary<int, int> categoriesCounter;
+        public Dictionary<int, int> CategoriesCounter
+        {
+            get { return categoriesCounter; }
+            set
+            {
+                categoriesCounter = value;
+                onPropertyChanged(nameof(CategoriesCounter));
             }
         }
 
@@ -1387,6 +1430,171 @@ namespace SklepexPOL.ViewModel
         public void shopInfoUpdate()
         {
             //określenie rodzaju, stanu i poziomu
+            //poziom
+            int counter = 0;
+            int counter2 = 0;
+            int counter3 = 0;
+            int counter4 = 0;
+            int counter5 = 0;
+            foreach (KeyValuePair<int, int> item in CategoriesCounter)
+            {
+                counter += item.Value;
+                if (item.Value >= 20)
+                {
+                    counter2++;
+                    counter3++;
+                    counter4++;
+                    counter5++;
+                }
+                else if (item.Value >= 15)
+                {
+                    counter2++;
+                    counter3++;
+                    counter4++;
+                }
+                else if (item.Value >= 10)
+                {
+                    counter2++;
+                    counter3++;
+                }
+                else if (item.Value >= 5)
+                    counter2++;
+
+                }
+            switch (ShopLevel)
+            {
+                case 1:
+                    //czy spełnia warunki obecnego poziomu
+                    if (ShopEmployees < 0 && OnHouseItems.Count < 1)
+                        R.Default.LvlDays += 1;
+                    //czy spełnia warunki podniesienia poziomu
+                    else if (ShopEmployees >= 1 && counter2 >= 2)
+                        IsLvlUp = true;
+                    break;
+                case 2:
+                    if (ShopEmployees < 1 && counter2<2)
+                        R.Default.LvlDays += 1;
+                    else if (ShopEmployees >= 10 && counter3 >= 5)
+                        IsLvlUp = true;
+                    break;
+                case 3:
+                    if (ShopEmployees < 10 && counter3 < 5)
+                        R.Default.LvlDays += 1;
+                    else if (ShopEmployees >= 18 && counter4 >= 10)
+                        IsLvlUp = true;
+                    break;
+                case 4:
+                    if (ShopEmployees < 18 && counter4 < 10)
+                        R.Default.LvlDays += 1;
+                    else if (ShopEmployees >= 30 && counter5 >= 15)
+                        IsLvlUp = true;
+                    break;
+                case 5:
+                    //czy spełnia warunki obecnego poziomu
+                    if (ShopEmployees < 30 &&  counter5 < 15)
+                        R.Default.LvlDays += 1;
+                    break;
+                default:
+                    //czy spełnia warunki podniesienia poziomu
+                    if (ShopEmployees >= 0 && CategoriesCounter.Count >= 1 )
+                        IsLvlUp = true;
+                    break;
+            }
+
+            //stan
+            switch (ShopLevel)
+            {
+                case 1:
+                    if (ShopEmployees > 2)
+                        ShopState = 3;
+                    else if (ShopEmployees > 0)
+                        ShopState = 2;
+                    else
+                        ShopState = 1;
+                    break;
+                case 2:
+                    if (ShopEmployees > 12)
+                        ShopState = 3;
+                    else if (ShopEmployees > 8)
+                        ShopState = 2;
+                    else if (ShopEmployees >= 1)
+                        ShopState = 1;
+                    else
+                        ShopState = 0;
+                    break;
+                case 3:
+                    if (ShopEmployees > 20)
+                        ShopState = 3;
+                    else if (ShopEmployees > 16)
+                        ShopState = 2;
+                    else if (ShopEmployees >= 10)
+                        ShopState = 1;
+                    else
+                        ShopState = 0;
+                    break;
+                case 4:
+                    if (ShopEmployees > 32)
+                        ShopState = 3;
+                    else if (ShopEmployees > 28)
+                        ShopState = 2;
+                    else if (ShopEmployees >= 18)
+                        ShopState = 1;
+                    else
+                        ShopState = 0;
+                    break;
+                case 5:
+                    if (ShopEmployees > 52)
+                        ShopState = 3;
+                    else if (ShopEmployees > 48)
+                        ShopState = 2;
+                    else if (ShopEmployees >= 30)
+                        ShopState = 1;
+                    else
+                        ShopState = 0;
+                    break;
+                default:
+                    ShopState = 1;
+                    break;
+            }
+
+            //rodzaj
+            
+            if(CategoriesCounter.Count > 1)
+            {
+                double[] percentages = new double[14] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+                foreach(KeyValuePair<int, int> items in CategoriesCounter)
+                {
+                    percentages[items.Key - 1] = items.Value / counter;
+                }
+                if (percentages[5] == 0 && percentages[6] == 0 && percentages[7] == 0 && percentages[8] == 0 && percentages[9] == 0 && percentages[10] == 0) ShopType = 1;
+                else if (percentages[0] + percentages[1] == 1) ShopType = 2;
+                else if (percentages[6] >= 0.65 ) ShopType = 3;
+                else if (percentages[5] >= 0.9) ShopType = 5;
+                else if (percentages[8] >= 0.95) ShopType = 6;
+                else if (percentages[10] >= 0.8) ShopType = 9;
+                else if (percentages[14] >= 0.85) ShopType = 11;
+                else ShopType = 10;
+            }
+            else
+            {
+                int type = CategoriesCounter.Keys.Single();
+                if (type == 1) ShopType = 2;
+                else if (type == 2) ShopType = 2;
+                else if (type == 3) ShopType = 4;
+                else if (type == 4) ShopType = 1;
+                else if (type == 5) ShopType = 8;
+                else if (type == 6) ShopType = 5;
+                else if (type == 7) ShopType = 3;
+                else if (type == 8) ShopType = 7;
+                else if (type == 9) ShopType = 6;
+                else if (type == 10) ShopType = 10;
+                else if (type == 11) ShopType = 9;
+                else if (type == 12) ShopType = 1;
+                else if (type == 13) ShopType = 1;
+                else if (type == 14) ShopType = 1;
+                else ShopType = 11;
+            }
+            
         }
 
         //czy można levelować
