@@ -138,5 +138,29 @@ namespace SklepexPOL.Properties {
                 this["warning"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string Rpasswd {
+            get {
+                return ((string)(this["Rpasswd"]));
+            }
+            set {
+                this["Rpasswd"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string Rlogin {
+            get {
+                return ((string)(this["Rlogin"]));
+            }
+            set {
+                this["Rlogin"] = value;
+            }
+        }
     }
 }

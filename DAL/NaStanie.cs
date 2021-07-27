@@ -16,7 +16,7 @@ namespace SklepexPOL.DAL
         public int Marza { get; set; }
         public int Magazyn { get; set; }
 
-        public Country(string nazwa, int ilosc, int cena, int wysokosc, int marza, int magazyn)
+        /*public Country(string nazwa, int ilosc, int cena, int wysokosc, int marza, int magazyn)
         {
             Nazwa = nazwa;
             Ilosc = ilosc;
@@ -25,7 +25,7 @@ namespace SklepexPOL.DAL
             Marza = marza;
             Magazyn = magazyn;
 
-        }
+        }*/
 
         public override string ToString()
         {

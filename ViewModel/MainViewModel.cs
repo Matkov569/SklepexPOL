@@ -19,6 +19,7 @@ namespace SklepexPOL.ViewModel
     using System.Windows.Data;
     using System.Collections;
     using System.Collections.ObjectModel;
+    using DAL;
 
     class MainViewModel : BaseViewModel
     {
@@ -30,10 +31,10 @@ namespace SklepexPOL.ViewModel
         stringConventer strConv = new stringConventer();
         //messageboxy
         interactions intercom = new interactions();
-        //ustalanie info o sklepie ?
-        //shopInfo informator = new shopInfo();
         //struktury
         structs structs = new structs();
+        //połączenie z bazą
+        DBConnection mysql;
 
         //uruchamianie sie aplikacji
         private ICommand hello;
@@ -46,21 +47,45 @@ namespace SklepexPOL.ViewModel
         }
         private void initialize()
         {
-            bool connection = true;
+            //jeśli użytkownik nie podał dostępu do mysql
+            if(R.Default.Rpasswd == "" && R.Default.Rlogin == "")
+            {
+                dialogShow();
+            }
+            //inicjacja mysql
+            mysql = DBConnection.Instance;
+
             //mysql - sprawdź czy jest połączenie
+            bool connection = mysql.IsConnection();
+            
             //nie ma połączenia z sql
             if (!connection)
             {
-                intercom.message("Nie można nawiązać połączenia z bazą danych!\nFunkcja gry zostaje dezaktywowana.", "Brak połączenia z bazą danych!");
-                IsSQL = false;
-                IsSavedGame = false;
+                if (intercom.YesOrNo("Nie można nawiązać połączenia z bazą danych!\n" +
+                    "Czy podane dane są poprawne?\n" +
+                    "Login: " + R.Default.Rlogin +"\n" +
+                    "Hasło: " + R.Default.Rpasswd, "Błąd połączenia z bazą danych!")) 
+                {
+                    intercom.message("Nie można nawiązać połączenia z bazą danych!\n" +
+                        "Funkcja gry zostaje dezaktywowana.", "Brak połączenia z bazą danych!");
+                    IsSQL = false;
+                    IsSavedGame = false;
+                }
+                else
+                {
+                    dialogShow().Wait();
+
+                }
+                
             }
             //jest
             else
             {
                 IsSQL = true;
-                bool db = true;
+
                 //mysql - sprawdź czy jest baza
+                bool db = mysql.IsDBConnection();
+                
                 //jeśli nie ma
                 if (!db) 
                 {
@@ -69,6 +94,12 @@ namespace SklepexPOL.ViewModel
                     R.Default.SoldItemsString = "";
                     R.Default.Save();
                     //mysql - zaimportuj plik baza.sql
+                    if (!mysql.DBImport())
+                    {
+                        intercom.message("Wykryto brak pewnych plików!\n" +
+                            "Program przerywa działanie.", "Brakujące pliki!");
+                        Environment.Exit(0);
+                    }
                 }
                 //jest
                 else
@@ -83,6 +114,29 @@ namespace SklepexPOL.ViewModel
                 
             }
             
+        }
+        private async Task dialogShow()
+        {
+            var dialog = new dialog();
+            if (dialog.ShowDialog() == true)
+            {
+                if (intercom.YesOrNo("Czy podane dane są poprawne?\n" +
+                    "Login: " + dialog.ResponseLogin +
+                    "\nHasło: " + dialog.ResponsePassword, "Potwierdzenie danych"))
+                {
+                    R.Default.Rpasswd = dialog.ResponsePassword;
+                    R.Default.Rlogin = dialog.ResponseLogin;
+                    R.Default.Save();
+                }
+                else
+                {
+                    dialogShow();
+                }
+            }
+            else
+            {
+                Environment.Exit(0);
+            }
         }
 
         //zamykanie sie aplikacji

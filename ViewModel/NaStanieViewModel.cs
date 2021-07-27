@@ -9,7 +9,7 @@ namespace SklepexPOL.ViewModel
 
     class NaStanieViewModel
     {
-        private DataAccess dataAccess;
+        /*private DataAccess dataAccess;
 
         public List<NaStanie> NaStanie { get { return dataAccess.GetAllCountries(); }  }
 
@@ -17,8 +17,8 @@ namespace SklepexPOL.ViewModel
         public NaStanieViewModel()
         {
             dataAccess = new DataAccess();
-        }
+        } */
     }
-
+       
 }
 
