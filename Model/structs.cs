@@ -124,6 +124,24 @@ namespace SklepexPOL.Model
             }
         }
         //zamówienia
+        public struct zam
+        {
+            public int ID { get; set; }
+            public string Name { get; set; }
+            public DateTime ODate { get; set; }
+            public DateTime DDate { get; set; }
+            public double Cost { get; set; }
+            public int Count { get; set; }
+            public zam(int _id, string _name, DateTime _odate, DateTime _ddate, double _cost, int _count)
+            {
+                ID = _id;
+                Name = _name;
+                ODate = _odate;
+                DDate = _ddate;
+                Cost = _cost;
+                Count = _count;
+            }
+        }
         public struct zamowienia
         {
             public string ID { get; set; }
@@ -240,6 +258,7 @@ namespace SklepexPOL.Model
             {
                 Items.Add(item);
             }
+
         }
         //lista list produktów
         public class produktyHandlerList

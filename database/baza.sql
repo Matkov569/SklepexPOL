@@ -216,21 +216,22 @@ DROP VIEW IF EXISTS osklepie;
 
 
 Create view doDostarczenia AS
-SELECT * FROM zamowienia 
+SELECT ID_zam, Data_zamowienia, Data_dostarczenia, m.Nazwa, Koszt 
+FROM zamowienia JOIN Magazyny m ON m.ID_mag = Zamowienia.Magazyn
 Where Data_dostarczenia >= CURDATE()
 Order By Data_dostarczenia asc, Data_zamowienia asc;
 
 
 Create view naStanie AS
-Select p.Nazwa, s.Ilosc, p.Cena, pod.Wysokosc, m.Marza, (z.Data_dostarczenia + INTERVAL p.Termin_przydatnosci DAY) as Termin_przydatnosci, z.Magazyn
+Select p.Nazwa, s.Ilosc, p.Cena, pod.Wysokosc, m.Marza, (z.Data_dostarczenia + INTERVAL p.Termin_przydatnosci DAY) as Termin_przydatnosci, z.Magazyn, s.ID_stan
 FROM
-stan s JOIN zamowienia z ON s.Zamowienie = z.ID_zam
+stan s 
+JOIN 
+zamowienia z ON s.Zamowienie = z.ID_zam
 JOIN
 magazyny m ON z.Magazyn = m.ID_mag
 JOIN
-pro_zam ON pro_zam.Zamowienie = z.ID_zam
-JOIN
-produkty p ON p.ID_prod = pro_zam.Produkt
+produkty p ON s.Produkt = p.ID_prod
 JOIN 
 podatki pod ON p.Podatek = pod.ID_pod;
 
@@ -239,7 +240,9 @@ Create view dostawcy AS
 SELECT m.ID_mag ID, m.Nazwa Dostawca, m.Czas_dostawy, m.Marza, k.Nazwa Kraj, k.Skrot, p.Nazwa Podatek, p.Wysokosc
 FROM magazyny m JOIN kraje k on m.Kraj = k.ID_kra 
 JOIN podatki p on k.Clo=p.ID_pod
+JOIN pro_mag ON pro_mag.Magazyn = m.ID_mag
 WHERE m.ID_mag>0
+GROUP BY m.ID_mag
 ORDER BY m.ID_mag ASC;
 
 

@@ -74,7 +74,6 @@ namespace SklepexPOL.ViewModel
                 else
                 {
                     dialogShow().Wait();
-
                 }
                 
             }
@@ -167,7 +166,9 @@ namespace SklepexPOL.ViewModel
             //zwiększenie daty o 1
             TodayDate = TodayDate.AddDays(1);
             //mysql => NextDay()
+            mysql.execute("call NextDay()");
             //mysql Update info set Ruch = TodayClientsValue
+            mysql.execute("Update info set Ruch = "+TodayClientsValue.ToString());
 
             //zmiany w pieniądzach
             MoneyBalance = MoneyBalance + MoneyIncome - MoneyExpense;
@@ -230,6 +231,7 @@ namespace SklepexPOL.ViewModel
                 MoneyExpense = EmployeesSalary * ShopEmployees;
             }
             //mysql => update info set Wydatki_dzienne = MoneyExpense
+            mysql.execute("update info set Wydatki_dzienne = "+ MoneyExpense);
 
             //sprawdzenie stanu, rodzaju i poziomu sklepu
             int oldType = ShopType;
@@ -237,6 +239,7 @@ namespace SklepexPOL.ViewModel
             if(ShopType != oldType)
             {
                 //mysql - zmień typ sklepu
+                mysql.execute("update info set Rodzaj = " + ShopType);
             }
 
             //sprawdzenie czy sklep nie powinien mieć obniżonego poziomu
@@ -262,8 +265,9 @@ namespace SklepexPOL.ViewModel
                     R.Default.warning = true;
 
                 }
-                
+
                 //mysql zmniejsz wartość lvl
+                mysql.execute("update info set Poziom = " + ShopLevel);
             }
 
             //info o funduszach
@@ -308,14 +312,24 @@ namespace SklepexPOL.ViewModel
         //zrobić na tej samej zasadzie co tą wyżej (żeby wczytywała to samo)
         private async Task gameWindowAsync()
         {
-            //inicjacja spisu produktów na stanie itd. - z bazy
-            double[] key = new double[] { 110, 5, 1, 1, 1, 1, 1 };
-            Dictionary<string, double[]> slownik = new Dictionary<string, double[]>();
-            //tu ma z bazy wczytać co jest na stanie
-            slownik.Add("pomidor", key);
-            slownik.Add("ogórek", key);
-            slownik.Add("Brokuł", key);
-            OnHouseItems = slownik;
+            //pobranie daty
+            TodayDate = mysql.Today();
+
+            //pobranie infa o sklepie z bazy
+            appOpen();
+
+            //inicjacja spisu produktów na stanie z bazy
+            OnHouseItems = mysql.onHouse(TodayDate);
+
+            int storage = 0;
+            foreach(KeyValuePair<string, double[]> item in OnHouseItems)
+            {
+                storage += (int)item.Value[0];
+            }
+
+            StorageValue = storage;
+
+            CategoriesCounter = mysql.catsCount();
 
             //Wywołanie wyświetlacza słownego dnia tygodnia
             TDN();
@@ -328,14 +342,27 @@ namespace SklepexPOL.ViewModel
             DateVis = Visibility.Visible;
 
             //wywołanie inicjacji listview'ów
-            OnHouseToListView(slownik);
+            OnHouseToListView(OnHouseItems);
             DeliveriesToListView();
 
             //wczytanie listy sprzedawców i ich produktów
-            ListOfSellers.Add(new structs.dostawcy(1,"Dostawca 1",3,0.6,"Polska","Cło",0.03));
-            ListOfProducts = new structs.produktyHandler();
-            ListOfProducts.Add(new structs.produkty(1,"Produkt",1.2,"VAT",0.08));
-            ListOfListOfProducts.Add(ListOfProducts);
+
+            List<structs.dostawcy> dostawcy = mysql.Sellers();
+            foreach (structs.dostawcy item in dostawcy)
+                ListOfSellers.Add(item);
+
+            List<List<structs.produkty>> produkty = mysql.SellersOffer(dostawcy);
+            foreach (List<structs.produkty> item in produkty)
+            {
+                structs.produktyHandler listOfProducts = new structs.produktyHandler();
+                foreach(structs.produkty produkt in item)
+                {
+                    listOfProducts.Add(produkt);
+                }
+                ListOfListOfProducts.Add(listOfProducts);
+            }
+
+            shopInfoUpdate();
 
             //chwila odpoczynku
             await Task.Delay(3000);
@@ -494,7 +521,7 @@ namespace SklepexPOL.ViewModel
         #region panel data
 
         //zmienna daty - zaktualizować z bazą
-        private DateTime todayDate = DateTime.Today;
+        private DateTime todayDate;
         public DateTime TodayDate
         {
             get { return todayDate; }
@@ -637,7 +664,10 @@ namespace SklepexPOL.ViewModel
                 //wczytywanie listy produktów danego sprzedawcy
                 if (value >= 0)
                 {
+                    Console.WriteLine(value);
+                    ListOfProducts = null;
                     ListOfProducts = ListOfListOfProducts.Item(value);
+                    SelectedProductIndex = -1;
                     IsProductsEnabled = true;
                 }
                 else
@@ -655,9 +685,10 @@ namespace SklepexPOL.ViewModel
             get { return selectedSeller; }
             set
             {
+                Console.WriteLine(value);
                 selectedSeller = value;
                 onPropertyChanged(nameof(SelectedSeller));
-                //onPropertyChanged(nameof(LOSIndex));
+                onPropertyChanged(nameof(LOSIndex));
                 Console.WriteLine("AAAA");
             }
         }
@@ -909,8 +940,25 @@ namespace SklepexPOL.ViewModel
         {
             ReservedStorageSpace += cartList.SpaceSum();
             //mysql => insert into zamowienia ... Data dostarczenia = dzisiaj + czas dostawy + 1 (jutro wyślą dopiero) 
+            string query = "Insert into zamowienia(Data_zamowienia, Data_dostarczenia, Magazyn, Koszt) values('" +
+               TodayDate.ToString("yyyy-MM-dd") + "', '" +
+               DateTime.Now.AddDays(SelectedSeller.DDaysV + 1).ToString("yyyy-MM-dd") + "', " +
+               SelectedSeller.ID + ", " +
+               cartList.CostSum().ToString().Replace(',', '.') + ")";
+            Console.WriteLine(query);
+            int id = mysql.insertID(query);
+            MoneyExpense += cartList.CostSum();
+            mysql.execute("Update info set Wydatki_calkowite = Wydatki_calkowite + " + cartList.CostSum().ToString().Replace(',','.'));
             //najlepiej foreach (var item in cartList){query = insert into pro_zam values (...)}
-            ordersList.Add(new structs.zamowienia("id uzyskane z mysql",
+            query = "";
+            foreach(var item in ShoppingCart)
+            {
+                query = "Insert into pro_zam values ("+item.ID+", "+id+", "+item.Count+")";
+                mysql.execute(query);
+            }
+
+            ordersList.Add(new structs.zamowienia(
+                id.ToString(),
                 SelectedSeller.Name,
                 TodayDate.ToString("dd/MM/yyyy"),
                 DateTime.Now.AddDays(SelectedSeller.DDaysV+1).ToString("dd/MM/yyyy"),
@@ -941,6 +989,19 @@ namespace SklepexPOL.ViewModel
             }
         }
 
+        //co jest na stanie
+        //{"produkt #id_zam":[ilosc, cena, wysokość podatku, marża dostawcy, termin ważności(ile dni zostało), id_zam, id_stan]}
+        private Dictionary<string, double[]> onHouseItems;
+        public Dictionary<string, double[]> OnHouseItems
+        {
+            get { return onHouseItems; }
+            set
+            {
+                onHouseItems = value;
+                onPropertyChanged(nameof(OnHouseItems));
+            }
+        }
+
         #endregion
 
         #region co jest zamówione
@@ -954,20 +1015,20 @@ namespace SklepexPOL.ViewModel
         {
             ordersList = new structs.zamowieniaHandler();
             //wczytaj z mysql zamowienia (widok dodostarczenia)
-            //foreach (kolejne rekordy w wynikach mysql)
-            //{
-                Button btn = new Button();
-                btn.Content = "Podgląd"; 
-                btn.Command = DeliveryLook;
-                btn.CommandParameter = 0;
+            List<structs.zam> list = mysql.orders();
+            int storage = 0;
+            foreach (structs.zam item in list)
+            {
                 ordersList.Add(new structs.zamowienia() { 
-                    ID = "id dostawcy", 
-                    Name = "Nazwa dostawcy", 
-                    ODate = "Data zamówienia w formacie dd/MM/yyyy",
-                    DDate = "Data dostarczenia w formacie dd/MM/yyyy",
-                    Cost = "Koszt zamówienia - strConv.money(kwota)", 
+                    ID = item.ID.ToString(), 
+                    Name = item.Name, 
+                    ODate = item.ODate.ToString("dd/MM/yyyy"),
+                    DDate = item.DDate.ToString("dd/MM/yyyy"),
+                    Cost = strConv.money(item.Cost), 
                     Action =  DeliveryLook});
-            //}
+                storage += item.Count;
+            }
+            ReservedStorageSpace = storage;
         }
 
         private ICommand deliveryLook;
@@ -977,8 +1038,10 @@ namespace SklepexPOL.ViewModel
             {
                 return deliveryLook ?? new RelayCommand(p => 
                 {
+                    Console.WriteLine(p);
                     //mysql pobierz dane o zamówieniu z id = id
-                    //zmień te dane w stringa z przejściami \n i wywołaj intercom.message(string,"Zamówienie #"+id.ToString());
+                    //zmień te dane w stringa z przejściami \n i wywołaj 
+                    intercom.message(mysql.order(int.Parse(p.ToString())),"Zamówienie #"+p.ToString());
                 }, null);
             } 
         }
@@ -1021,18 +1084,7 @@ namespace SklepexPOL.ViewModel
             return OpenDate.ToString("dd/MM/yyyy") +" ("+(TodayDate - OpenDate).TotalDays.ToString()+" dni)";
         }
 
-        //co jest na stanie - wczytać z bazy
-        //{"produkt #id_zam":[ilosc, cena, wysokość podatku, marża dostawcy, termin ważności(ile dni zostało), id_zam, id_stan]}
-        private Dictionary<string, double[]> onHouseItems;
-        public Dictionary<string, double[]> OnHouseItems
-        {
-            get { return onHouseItems; }
-            set
-            {
-                onHouseItems = value;
-                onPropertyChanged(nameof(OnHouseItems));
-            }
-        }
+        
 
         //informacja o ilościach kategorii i produktów
         // {id_kat : count()}
@@ -1112,8 +1164,8 @@ namespace SklepexPOL.ViewModel
             get { return strConv.money(MoneyBalance + MoneyIncome - MoneyExpense); }
         }
 
-        //ilość klientów - wczytać z bazy
-        private int todayClientsValue = 10;
+        //ilość klientów 
+        private int todayClientsValue;
         public int TodayClientsValue
         {
             get { return todayClientsValue; }
@@ -1162,7 +1214,7 @@ namespace SklepexPOL.ViewModel
         }
 
         //poziom sklepu
-        private int shopLevel = 1;
+        private int shopLevel;
         public int ShopLevel
         {
             get { return shopLevel; }
@@ -1189,7 +1241,7 @@ namespace SklepexPOL.ViewModel
         }
 
         //stan sklepu
-        private int shopState = 2;
+        private int shopState;
         public int ShopState
         {
             get { return shopState; }
@@ -1207,9 +1259,9 @@ namespace SklepexPOL.ViewModel
         }
         private string SSS()
         {
-            if (ShopLevel == 0) return "Zły";
-            else if (ShopLevel == 1) return "Średni";
-            else if (ShopLevel == 2) return "Dobry";
+            if (ShopState == 0) return "Zły";
+            else if (ShopState == 1) return "Średni";
+            else if (ShopState == 2) return "Dobry";
             else return "Świetny";
         }
 
@@ -1266,7 +1318,7 @@ namespace SklepexPOL.ViewModel
         }
 
         //rodzaj sklepu
-        private int shopType = 10;
+        private int shopType;
         public int ShopType
         {
             get { return shopType; }
@@ -1430,6 +1482,35 @@ namespace SklepexPOL.ViewModel
             }
         }
 
+
+        //info o sklepie - wczytywanie
+        private void appOpen()
+        {
+            Dictionary<string, double> info = mysql.appOpen();
+            MoneyBalance = info["Saldo"];
+            MoneyIncome = info["Dochod_dzienny"];
+            MoneyExpense = info["Wydatki_dzienne"];
+            Console.WriteLine("int");
+            TodayClientsValue = (int)info["Ruch"];
+            Console.WriteLine("int");
+            ShopEmployees = (int)info["Liczba_pracownikow"];
+            Console.WriteLine("int");
+            ShopType = (int)info["Rodzaj"];
+            Console.WriteLine("int");
+            ShopLevel = (int)info["Poziom"];
+            Console.WriteLine("int");
+            ShopMargin = info["Marza"];
+            RentValue = info["oplaty_miesieczne"];
+            EmployeesSalary = info["wynagrodzenie"];
+            StorageSize = (int)info["pojemnosc_magazynu"];
+            Console.WriteLine("int");
+
+            Dictionary<string, string> infoS = mysql.shopInfo();
+            ShopName = infoS["Nazwa"];
+            OpenDate = DateTime.Parse(infoS["Data_zalozenia"]);
+        }
+
+
         //komendy
 
         //zmiana marży
@@ -1465,6 +1546,7 @@ namespace SklepexPOL.ViewModel
                 return hire ?? new RelayCommand(p => { 
                     ShopEmployees += 1;
                     //sql update info set liczba_pracownikow = liczba_pracownikow + 1;
+                    mysql.execute("update info set liczba_pracownikow = liczba_pracownikow + 1");
                     shopInfoUpdate();
                 }, null);
             }
@@ -1477,6 +1559,7 @@ namespace SklepexPOL.ViewModel
                 return fire ?? new RelayCommand(p => {
                     ShopEmployees -= 1;
                     //sql update info set liczba_pracownikow = liczba_pracownikow - 1;
+                    mysql.execute("update info set liczba_pracownikow = liczba_pracownikow - 1");
                     shopInfoUpdate();
                 }, arg => ShopEmployees > 0);
             }
@@ -1612,12 +1695,13 @@ namespace SklepexPOL.ViewModel
                     ShopState = 1;
                     break;
             }
+            Console.WriteLine(ShopState);
 
             //rodzaj
             
             if(CategoriesCounter.Count > 1)
             {
-                double[] percentages = new double[14] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+                double[] percentages = new double[15] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
                 foreach(KeyValuePair<int, int> items in CategoriesCounter)
                 {
                     percentages[items.Key - 1] = items.Value / counter;
@@ -1675,7 +1759,10 @@ namespace SklepexPOL.ViewModel
                 {
                     //lewelowanie
                     //sql zwiększ level
+                    mysql.execute("update info set Poziom = Poziom + 1");
+                    mysql.execute("update info set Najwyzszy_poziom = Poziom");
                     //wczytaj dane dla levelu
+                    appOpen();
                     ShopLevel += 1;
                 }, null);
             }
@@ -1746,15 +1833,14 @@ namespace SklepexPOL.ViewModel
             if (!R.Default.IsGameSaved || confirm)
             {
                 //sql theblip
-                //mysql => select @@sql_mode; -> do zmiennej
+                mysql.execute("call TheBlip()");
                 //mysql => SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
+                mysql.execute("SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO'");
                 //mysql => Insert Into zamowienia Values(0,CURDATE(),CURDATE(),0,0);
-                //mysql => SET SESSION sql_mode <zmienna> 
-                
-                //Console.WriteLine(ShopNameInpt);
-                //Console.WriteLine(SelectedShopType);
+                mysql.execute("Insert Into zamowienia Values(0,CURDATE(),CURDATE(),0,0)");
 
                 //typ sklepu
+                /*
                 switch (SelectedShopType)
                 {
                     //spożywczy
@@ -1802,11 +1888,19 @@ namespace SklepexPOL.ViewModel
                         //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
                         break;
                 }
+                */
+                mysql.execute("Insert into stan (Ilosc,Produkt,Zamowienie) values " +
+                    "(500,3,0), (500,10,0), (500,24,0), (500,26,0), (10,29,0), (100,44,0)");
+                mysql.execute("Insert Into pro_zam Values " +
+                    "(3, 0, 500), (10, 0, 500), (24, 0, 500), (26, 0, 500), (29, 0, 10), (44, 0, 100)");
+
                 string query = "Insert Into info Values ('"+ 
                     ShopNameInpt.Replace('"', '\"').Replace("'", "\'") +
                     "',CURDATE(),2000,CURDATE(),0.4,0,0,0,0,0,0,0,10,"+(SelectedShopType+1)+",1,1);";
                 //mysql => query
+                mysql.execute(query);
                 //mysql => Update stan Set Liczba_zamowien = 0;
+                mysql.execute("Update info Set Liczba_zamowien = 0");
 
                 R.Default.ClientsCountValue = 10;
                 R.Default.TodayDate = DateTime.Now;
@@ -1814,7 +1908,10 @@ namespace SklepexPOL.ViewModel
                 R.Default.IsGameSaved = true;
                 R.Default.Save();
 
-
+                NGVis = Visibility.Collapsed;
+                DateVis = Visibility.Visible;
+                ShopNameInpt = "";
+                gameWindowAsync();
             }
         }
 
@@ -1878,7 +1975,12 @@ namespace SklepexPOL.ViewModel
         {
             //mysql pobierz dane końcowe
             //ustaw zmienne danych końcowych
-            //select  * from info;
+            Dictionary<string, string> info = mysql.endInfo();
+            TotalIncome = info["dochod"];
+            TotalExpense = info["wydatki"];
+            TotalOrdersValue = info["liczba"];
+            TotalOrdersCost = info["koszt"];
+            HighestLevel = info["lvl"];
 
             GOVis = Visibility.Visible;
             DateVis = Visibility.Collapsed;
@@ -1886,6 +1988,7 @@ namespace SklepexPOL.ViewModel
 
             //czyszczenie bazy danych
             //mysql => the blip
+            mysql.execute("call TheBlip()");
 
             IsSavedGame = false;
             R.Default.IsGameSaved = false;
@@ -1952,16 +2055,23 @@ namespace SklepexPOL.ViewModel
             }
         }
         private int highestLevel;
-        public int HighestLevel
+        public string HighestLevel
         {
-            get { return highestLevel; }
+            get {
+                if (highestLevel == 1) return "(1) - Sklepik";
+                else if (highestLevel == 2) return "(2) - Sklep";
+                else if (highestLevel == 3) return "(3) - Dyskont";
+                else if (highestLevel == 4) return "(4) - Supermarket";
+                else if (highestLevel == 5) return "(5) - Hipermarket";
+                else return "(0) - Pustostan";
+            }
             set
             {
-                highestLevel = value;
+                highestLevel = int.Parse(value);
                 onPropertyChanged(nameof(HighestLevel));
             }
         }
-
+        
         #endregion
   
     }

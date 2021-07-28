@@ -64,11 +64,11 @@
                 <TextBlock Style="{StaticResource txtBlock}" HorizontalAlignment="Center" FontWeight="Bold">Czas dostawy</TextBlock>
             </StackPanel>
             <StackPanel Margin="0,5">
-                <TextBlock Style="{StaticResource txtBlock}" HorizontalAlignment="Center" Text="{Binding SelectedSeller.Country}"/>
+                <TextBlock Style="{StaticResource txtBlock}" HorizontalAlignment="Center" Text="{Binding SelectedSeller.Country}" TextWrapping="Wrap"/>
                 <TextBlock Style="{StaticResource txtBlock}" HorizontalAlignment="Center" FontWeight="Bold">Kraj dostawcy</TextBlock>
             </StackPanel>
             <StackPanel Margin="0,5">
-                <TextBlock Style="{StaticResource txtBlock}" HorizontalAlignment="Center" Text="{Binding SelectedSeller.TaxName}"/>
+                <TextBlock Style="{StaticResource txtBlock}" HorizontalAlignment="Center" Text="{Binding SelectedSeller.TaxName}" TextWrapping="Wrap"/>
                 <TextBlock Style="{StaticResource txtBlock}" HorizontalAlignment="Center" FontWeight="Bold">Cło</TextBlock>
             </StackPanel>
             <StackPanel Margin="0,5">
@@ -109,7 +109,7 @@
                 <TextBlock Style="{StaticResource txtBlock}" HorizontalAlignment="Center" FontWeight="Bold">Cena netto</TextBlock>
             </StackPanel>
             <StackPanel Margin="0,10">
-                <TextBlock Style="{StaticResource txtBlock}" HorizontalAlignment="Center" Text="{Binding SelectedProduct.TaxName}"/>
+                <TextBlock Style="{StaticResource txtBlock}" HorizontalAlignment="Center" Text="{Binding SelectedProduct.TaxName}" TextWrapping="Wrap"/>
                 <TextBlock Style="{StaticResource txtBlock}" HorizontalAlignment="Center" FontWeight="Bold">Podatek</TextBlock>
             </StackPanel>
             <StackPanel Margin="0,10">

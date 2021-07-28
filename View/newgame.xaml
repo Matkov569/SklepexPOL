@@ -24,9 +24,9 @@
                     HorizontalAlignment="Center" Grid.Row="0" Margin="10">
             <TextBlock FontSize="24" FontFamily="Arial" Margin="10" HorizontalAlignment="Center">Podaj nazwę swojego sklepu: </TextBlock>
             <TextBox x:Name="ShopNameInput" Width="470" FontFamily="Consolas" FontSize="24" 
-                     Margin="10" MaxLength="250" MaxLines="1" Text="{Binding ShopNameInpt}" />
+                     Margin="10" MaxLength="250" MaxLines="1" Text="{Binding ShopNameInpt, UpdateSourceTrigger=PropertyChanged}" />
         </StackPanel>
-        <StackPanel VerticalAlignment="Center" 
+        <StackPanel VerticalAlignment="Center" Visibility="Collapsed"
                     HorizontalAlignment="Center" Grid.Row="1">
             <TextBlock FontSize="24" FontFamily="Arial" Margin="10" HorizontalAlignment="Center">Wybierz rodzaj swojego sklepu:</TextBlock>
             <ComboBox Width="470" FontFamily="Consolas" FontSize="24" Margin="10" 
