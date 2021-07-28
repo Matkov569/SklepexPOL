@@ -167,6 +167,19 @@ namespace SklepexPOL.ViewModel
         //funkcja przechodzenia do następnego dnia
         private async Task dayChangeAsync()
         {
+            Console.WriteLine("nowy dzień");
+
+            //sprawdzenie czy coś nie jest po terminie
+            foreach(KeyValuePair<string,double[]> item in OnHouseItems)
+            {
+                if (item.Value[4] == 0)
+                {
+                    //{"produkt #id_zam":[ilosc, cena, wysokość podatku, marża dostawcy, 
+                    //termin ważności(ile dni zostało), id_zam, id_stan]}
+                    mysql.execute("delete from stan where ID_stan = " + item.Value[6]);
+                }
+            }
+
             //zwiększenie daty o 1
             TodayDate = TodayDate.AddDays(1);
             //mysql => NextDay()
@@ -178,8 +191,16 @@ namespace SklepexPOL.ViewModel
             MoneyBalance = MoneyBalance + MoneyIncome - MoneyExpense;
 
             //sprawdzenie czy jest dzisiaj dostawa
-            IsDeliveryDay = mysql.execute("select count(ID_zam) from zamowienia where Data_dostarczenia = '"+TodayDate.ToString("yyyy-MM-dd")+"'");
-
+            
+            IsDeliveryDay = false;
+            foreach(var item in Deliveries)
+            {
+                if(item.DDate == TodayDate.ToString("dd/MM/yyyy"))
+                {
+                    IsDeliveryDay = true;
+                    break;
+                }
+            }
             //słowny zapis dnia
             TDN();
 
@@ -215,13 +236,13 @@ namespace SklepexPOL.ViewModel
             {
                 //{"produkt #id_zam":[ilosc, cena, wysokość podatku, marża dostawcy, 
                 //termin ważności(ile dni zostało), id_zam, id_stan]}
-                mysql.execute("update stan set Ilosc = Ilosc - " + item.Value[0] + " where ID_stan = " + item.Value[6]);
+                mysql.execute("update stan set Ilosc = (Ilosc - " + item.Value[0] + ") where ID_stan = " + item.Value[6]);
             }
-
+            Console.WriteLine("koniec foreacha");
             //jeśli jest dostawa - dodaj produkty na stan
             if (IsDeliveryDay)
             {
-                mysql.delivery();
+                mysql.delivery(TodayDate);
             }
 
             //wczytanie z bazy liczby towarów na stanie
@@ -234,6 +255,7 @@ namespace SklepexPOL.ViewModel
             //obliczenie dochodów ze sprzedaży - odblokować
             MoneyIncome = moneyManager.stonksCalc(SoldItems, ShopMargin);
             //mysql => update info set Dochod_dzienny = MoneyIncome
+            mysql.execute("update info set Dochod_dzienny = " + MoneyIncome.ToString().Replace(',', '.'));
 
             //obliczenie wydatków
             if (TodayDate.Day == 1)
@@ -247,7 +269,7 @@ namespace SklepexPOL.ViewModel
                 MoneyExpense = EmployeesSalary * ShopEmployees;
             }
             //mysql => update info set Wydatki_dzienne = MoneyExpense
-            mysql.execute("update info set Wydatki_dzienne = "+ MoneyExpense);
+            mysql.execute("update info set Wydatki_dzienne = "+ MoneyExpense.ToString().Replace(',', '.'));
 
             //sprawdzenie stanu, rodzaju i poziomu sklepu
             int oldType = ShopType;
@@ -289,23 +311,54 @@ namespace SklepexPOL.ViewModel
             //info o funduszach
             if (MoneyBalance < -1000)
             {
+                Console.WriteLine("straty uuu");
                 IsAlert = true;
                 AlertText = "Twój sklep przynosi straty. Jeśli jego sytuacja nie poprawi się, zostanie on zamknięty.";
+                onPropertyChanged(nameof(AlertText));
             }
             else
             {
-                IsAlert = false;
+                if (IsLvlUp && MoneyBalance > 0)
+                {
+                    Console.WriteLine("nie straty uuu");
+                    IsAlert = true;
+                    AlertText = "Istnieje możliwość zwiększenia poziomu sklepu.";
+                    onPropertyChanged(nameof(AlertText));
+                }
+                else
+                    IsAlert = false;
             }
-            //info czy można levelować
-            if (IsLvlUp && MoneyBalance > 0)
+            
+            
+
+            appOpen();
+
+            int storage = 0;
+            foreach (KeyValuePair<string, double[]> item in OnHouseItems)
             {
-                IsAlert = true;
-                AlertText = "Istnieje możliwość zwiększenia poziomu sklepu.";
+                storage += (int)item.Value[0];
             }
-            else
+
+            StorageValue = storage;
+
+            CategoriesCounter = mysql.catsCount();
+
+            List<structs.dostawcy> dostawcy = mysql.Sellers();
+            foreach (structs.dostawcy item in dostawcy)
+                ListOfSellers.Add(item);
+
+            List<List<structs.produkty>> produkty = mysql.SellersOffer(dostawcy);
+            foreach (List<structs.produkty> item in produkty)
             {
-                IsAlert = false;
+                structs.produktyHandler listOfProducts = new structs.produktyHandler();
+                foreach (structs.produkty produkt in item)
+                {
+                    listOfProducts.Add(produkt);
+                }
+                ListOfListOfProducts.Add(listOfProducts);
             }
+
+            shopInfoUpdate();
 
             //chwila odpoczynku
             await Task.Delay(3000);
@@ -358,8 +411,9 @@ namespace SklepexPOL.ViewModel
 
             //wywołanie inicjacji listview'ów
             OnHouseToListView(OnHouseItems);
+            Console.WriteLine("po onhouse");
             DeliveriesToListView();
-
+            Console.WriteLine("po ordersach");
             //wczytanie listy sprzedawców i ich produktów
 
             List<structs.dostawcy> dostawcy = mysql.Sellers();
@@ -1036,6 +1090,7 @@ namespace SklepexPOL.ViewModel
             int storage = 0;
             foreach (structs.zam item in list)
             {
+                Console.WriteLine("foreach");
                 ordersList.Add(new structs.zamowienia() { 
                     ID = item.ID.ToString(), 
                     Name = item.Name, 
@@ -1538,7 +1593,9 @@ namespace SklepexPOL.ViewModel
             {
                 return marginChange ?? new RelayCommand(p => { 
                     ShopMargin = (double)p;
+                    mysql.execute("update info set marza = " + ShopMargin.ToString().Replace(',','.'));
                     onPropertyChanged(nameof(MarginString));
+                    shopInfoUpdate();
                     IsMarginSliderVisible = Visibility.Collapsed;
                 }, null);
             }
@@ -1852,9 +1909,8 @@ namespace SklepexPOL.ViewModel
                 //sql theblip
                 mysql.execute("call TheBlip()");
                 //mysql => SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
-                mysql.execute("SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO'");
+                mysql.execute("SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO'; Insert Into zamowienia Values(0, CURDATE(), CURDATE(), 0, 0)");
                 //mysql => Insert Into zamowienia Values(0,CURDATE(),CURDATE(),0,0);
-                mysql.execute("Insert Into zamowienia Values(0,CURDATE(),CURDATE(),0,0)");
 
                 //typ sklepu
                 /*
@@ -1907,13 +1963,13 @@ namespace SklepexPOL.ViewModel
                 }
                 */
                 mysql.execute("Insert into stan (Ilosc,Produkt,Zamowienie) values " +
-                    "(500,3,0), (500,10,0), (500,24,0), (500,26,0), (10,29,0), (100,44,0)");
+                    "(50,3,0), (50,10,0), (50,24,0), (50,26,0), (10,29,0), (10,44,0)");
                 mysql.execute("Insert Into pro_zam Values " +
-                    "(3, 0, 500), (10, 0, 500), (24, 0, 500), (26, 0, 500), (29, 0, 10), (44, 0, 100)");
+                    "(3, 0, 50), (10, 0, 50), (24, 0, 50), (26, 0, 50), (29, 0, 10), (44, 0, 10)");
 
                 string query = "Insert Into info Values ('"+ 
                     ShopNameInpt.Replace('"', '\"').Replace("'", "\'") +
-                    "',CURDATE(),2000,CURDATE(),0.4,0,0,0,0,0,0,0,10,"+(SelectedShopType+1)+",1,1);";
+                    "',CURDATE(),1000,CURDATE(),0.4,0,0,0,0,0,0,0,10,"+(SelectedShopType+1)+",1,1);";
                 //mysql => query
                 mysql.execute(query);
                 //mysql => Update stan Set Liczba_zamowien = 0;

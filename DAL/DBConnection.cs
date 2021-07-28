@@ -107,7 +107,7 @@ namespace SklepexPOL.DAL
             {
                 connection = new MySqlConnection(connect.ToString());
                 connection.Open();
-                MySqlCommand command = new MySqlCommand("Select * from kategorie", connection);
+                MySqlCommand command = new MySqlCommand("Select * from info", connection);
                 if (command.ExecuteReader().HasRows)
                 {
                     connection.Close();
@@ -196,13 +196,9 @@ namespace SklepexPOL.DAL
                 foreach(structs.dostawcy item in dostawcy)
                 {
                     List<structs.produkty> lista = new List<structs.produkty>();
-                    Console.WriteLine(item.ID);
                     string query = "call oferta(" + item.ID + ")";
-                    Console.WriteLine(query);
                     MySqlCommand command = new MySqlCommand(query, connection);
-                    Console.WriteLine("uuu");
                     MySqlDataReader result = command.ExecuteReader();
-                    Console.WriteLine("uuu");
 
                     if (result.HasRows)
                     {
@@ -242,29 +238,21 @@ namespace SklepexPOL.DAL
                 {
                     while (result.Read())
                     {
-                        Console.WriteLine("pêtla");
                         string subquery = "select sum(Ilosc) from pro_zam where Zamowienie = " + result["ID_zam"].ToString();
-                        Console.WriteLine(subquery);
-                        //MySqlCommand command2 = new MySqlCommand(subquery, connection);
-                        Console.WriteLine("pêtla");
-                        //var result2 = command2.ExecuteScalar();
                         int val = integer(subquery);
-                        Console.WriteLine("pêtla");
-                        //Console.WriteLine(result2);
                         dict.Add(new structs.zam(
                             int.Parse(result["ID_zam"].ToString()),
                             result["Nazwa"].ToString(),
                             DateTime.Parse(result["Data_zamowienia"].ToString()),
                             DateTime.Parse(result["Data_dostarczenia"].ToString()),
                             double.Parse(result["Koszt"].ToString()),
-                            //int.Parse(result2.ToString())));
                             val));
                         
                     }
                 }
                 connection.Close();
             }
-
+            Console.WriteLine("end - orders");
             return dict;
         }
 
@@ -283,7 +271,6 @@ namespace SklepexPOL.DAL
                 {
                     while (result.Read())
                     {
-                        Console.WriteLine("pêtla");
                         dict.Add(
                             result["Nazwa"].ToString() + " #" + result["Magazyn"].ToString(),
                             new double[]
@@ -532,9 +519,28 @@ namespace SklepexPOL.DAL
         }
 
         //dodawanie produktów z zamówienia do stanu
-        public void delivery()
+        public void delivery(DateTime Today)
         {
-
+            Console.WriteLine("delivery");
+            string query = "Select ID_zam, Produkt, Ilosc from zamowienia " +
+                "join pro_zam on zamowienia.ID_zam = pro_zam.Zamowienie " +
+                "Where ID_zam > 0 AND Data_dostarczenia = '" + Today.ToString("yyyy-MM-dd") + "'";
+            using (connection = new MySqlConnection(connect.ToString()))
+            {
+                connection.Open();
+                MySqlCommand command = new MySqlCommand(query, connection);
+                var result = command.ExecuteReader();
+                while (result.Read())
+                {
+                    Console.WriteLine("del - foreach");
+                    string subquery = "Insert into stan Values (NULL, " +
+                        result["Ilosc"].ToString() + ", " +
+                        result["Produkt"].ToString() + ", " +
+                        result["ID_zam"].ToString() + ")";
+                    execute(subquery);
+                }
+                connection.Close();
+            }
         }
     }
 }

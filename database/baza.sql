@@ -303,9 +303,16 @@ AFTER INSERT ON zamowienia
 FOR each row
 UPDATE info SET Liczba_zamowien = Liczba_zamowien + 1;
 
+DELIMITER ;;
+CREATE TRIGGER PaniWiesia 
+AFTER UPDATE ON stan
+FOR EACH ROW
+BEGIN
+IF new.Ilosc=0 THEN
+DELETE FROM stan WHERE new.Ilosc=0;
+END IF;
+END ;;
+DELIMITER ;
 
-Create trigger PaniWiesia AFTER UPDATE On stan
-for each row
-DELETE FROM stan WHERE Ilosc=0;
 
 

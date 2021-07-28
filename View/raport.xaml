@@ -46,7 +46,7 @@
         <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
                     Visibility="{Binding IA}"
                     Margin="10" VerticalAlignment="Center">
-            <TextBlock Text="{Binding AlertText}" HorizontalAlignment="Center" FontSize="18" FontFamily="Consolas" Foreground="Red">Istnieje możliwość zwiększenia poziomu sklepu</TextBlock>
+            <TextBlock Text="{Binding AlertText}" HorizontalAlignment="Center" FontSize="18" FontFamily="Consolas" Foreground="Red"/>
         </StackPanel>
     </Grid>
 </UserControl>
