@@ -23,6 +23,7 @@ namespace SklepexPOL.ViewModel
 
     class MainViewModel : BaseViewModel
     {
+        #region klasy
         //generator klientów i zakupów
         clientRandomizer randomizer = new clientRandomizer();
         //kalkulator
@@ -35,6 +36,9 @@ namespace SklepexPOL.ViewModel
         structs structs = new structs();
         //połączenie z bazą
         DBConnection mysql;
+        //globalny odtwarzacz muzyki
+        MediaPlayer player = new MediaPlayer();
+        #endregion
 
         //uruchamianie sie aplikacji
         private ICommand hello;
@@ -174,14 +178,12 @@ namespace SklepexPOL.ViewModel
             MoneyBalance = MoneyBalance + MoneyIncome - MoneyExpense;
 
             //sprawdzenie czy jest dzisiaj dostawa
-            //IsDeliveryDay
+            IsDeliveryDay = mysql.execute("select count(ID_zam) from zamowienia where Data_dostarczenia = '"+TodayDate.ToString("yyyy-MM-dd")+"'");
 
             //słowny zapis dnia
             TDN();
 
             //muzyczka
-            //zmienić na to że jak będzie dostawa to ma grać
-            MediaPlayer player = new MediaPlayer();
             if (IsDeliveryDay)
                 player.Open(new Uri(@"../../sounds/delivery.mp3", UriKind.Relative));
             else if (MoneyBalance <= -5000)
@@ -197,26 +199,40 @@ namespace SklepexPOL.ViewModel
 
             //przejście z widoku gry na widok daty
             gameDateSwitch();
-            
+
             //mysql => pobranie ilości towarów na stanie
+            OnHouseItems = mysql.onHouse(TodayDate);
 
             //generowanie klientów i ich zakupów
             TodayClientsValue = randomizer.clientsCreator(TodayClientsValue, ShopMargin, ShopState, ShopLevel, TodayDate);
             SoldItems = randomizer.shopListGenerator(TodayClientsValue, OnHouseItems, ShopLevel, TodayDate);
-            //mysql => odjęcie sprzedanych towarów z bazy
             R.Default.ClientsCountValue = TodayClientsValue;
             R.Default.SoldItemsString = TSI();
             R.Default.Save();
 
+            //mysql => odjęcie sprzedanych towarów z bazy
+            foreach (KeyValuePair<string, double[]> item in SoldItems)
+            {
+                //{"produkt #id_zam":[ilosc, cena, wysokość podatku, marża dostawcy, 
+                //termin ważności(ile dni zostało), id_zam, id_stan]}
+                mysql.execute("update stan set Ilosc = Ilosc - " + item.Value[0] + " where ID_stan = " + item.Value[6]);
+            }
+
+            //jeśli jest dostawa - dodaj produkty na stan
+            if (IsDeliveryDay)
+            {
+                mysql.delivery();
+            }
+
             //wczytanie z bazy liczby towarów na stanie
-            //OnHouseItems = ...
+            OnHouseItems = mysql.onHouse(TodayDate);
 
             //generowanie listview'ów
             OnHouseToListView(OnHouseItems);
             DeliveriesToListView();
 
             //obliczenie dochodów ze sprzedaży - odblokować
-            //MoneyIncome = moneyManager.stonksCalc(SoldItems, ShopMargin);
+            MoneyIncome = moneyManager.stonksCalc(SoldItems, ShopMargin);
             //mysql => update info set Dochod_dzienny = MoneyIncome
 
             //obliczenie wydatków
@@ -309,7 +325,6 @@ namespace SklepexPOL.ViewModel
         }
 
         //przejście do gry z przycisku kontynuuj/po utworzeniu nowej gry
-        //zrobić na tej samej zasadzie co tą wyżej (żeby wczytywała to samo)
         private async Task gameWindowAsync()
         {
             //pobranie daty
@@ -676,6 +691,7 @@ namespace SklepexPOL.ViewModel
                     IsProductsEnabled = false;
                 }
                 onPropertyChanged(nameof(ListOfProducts));
+                onPropertyChanged(nameof(Products));
             }
         }
         //wybrany dostawca
@@ -694,7 +710,7 @@ namespace SklepexPOL.ViewModel
         }
         
         //lista produktów
-        private structs.produktyHandler ListOfProducts;
+        private structs.produktyHandler ListOfProducts = new structs.produktyHandler();
         public ObservableCollection<structs.produkty> Products
         {
             get { return ListOfProducts.Items; }
@@ -948,7 +964,8 @@ namespace SklepexPOL.ViewModel
             Console.WriteLine(query);
             int id = mysql.insertID(query);
             MoneyExpense += cartList.CostSum();
-            mysql.execute("Update info set Wydatki_calkowite = Wydatki_calkowite + " + cartList.CostSum().ToString().Replace(',','.'));
+            mysql.execute("Update info set Wydatki_dzienne = Wydatki_dzienne + " + cartList.CostSum().ToString().Replace(',','.'));
+            mysql.execute("Update info set Koszt_zamowien = Koszt_zamowien + " + cartList.CostSum().ToString().Replace(',','.'));
             //najlepiej foreach (var item in cartList){query = insert into pro_zam values (...)}
             query = "";
             foreach(var item in ShoppingCart)
@@ -1081,7 +1098,7 @@ namespace SklepexPOL.ViewModel
         }
         private string ODS()
         {
-            return OpenDate.ToString("dd/MM/yyyy") +" ("+(TodayDate - OpenDate).TotalDays.ToString()+" dni)";
+            return OpenDate.ToString("dd") + "/" + OpenDate.ToString("MM") + "/" + OpenDate.ToString("yyyy") + " ("+(TodayDate - OpenDate).TotalDays.ToString()+" dni)";
         }
 
         
@@ -1907,6 +1924,7 @@ namespace SklepexPOL.ViewModel
                 R.Default.SoldItemsString = "";
                 R.Default.IsGameSaved = true;
                 R.Default.Save();
+                onPropertyChanged(nameof(IsSavedGame));
 
                 NGVis = Visibility.Collapsed;
                 DateVis = Visibility.Visible;
@@ -1959,7 +1977,6 @@ namespace SklepexPOL.ViewModel
             if(intercom.YesOrNo("Czy na pewno chcesz zamknąć swój sklep?\nTego działania nie można odwrócić!","Czy chcesz zamknąć sklep?"))
             {
                 Console.WriteLine("zamykamy");
-                MediaPlayer player = new MediaPlayer();
                 player.Open(new Uri(@"../../sounds/funeral.mp3", UriKind.Relative));
                 player.Play();
                 ByeScreen();
@@ -1975,6 +1992,7 @@ namespace SklepexPOL.ViewModel
         {
             //mysql pobierz dane końcowe
             //ustaw zmienne danych końcowych
+            mysql.execute("call NextDay()");
             Dictionary<string, string> info = mysql.endInfo();
             TotalIncome = info["dochod"];
             TotalExpense = info["wydatki"];
@@ -2037,7 +2055,7 @@ namespace SklepexPOL.ViewModel
         private double totalOrdersValue;
         public string TotalOrdersValue
         {
-            get { return strConv.money(totalOrdersValue); }
+            get { return totalOrdersValue.ToString(); }
             set
             {
                 totalOrdersValue = double.Parse(value);

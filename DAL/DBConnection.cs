@@ -530,5 +530,11 @@ namespace SklepexPOL.DAL
             }
             return dict;
         }
+
+        //dodawanie produktów z zamówienia do stanu
+        public void delivery()
+        {
+
+        }
     }
 }
