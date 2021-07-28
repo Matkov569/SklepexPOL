@@ -51,8 +51,10 @@ namespace SklepexPOL.ViewModel
         }
         private void initialize()
         {
+            R.Default.Rpasswd = "";
+            R.Default.Rlogin = "" ;
             //jeśli użytkownik nie podał dostępu do mysql
-            if(R.Default.Rpasswd == "" && R.Default.Rlogin == "")
+            if (R.Default.Rpasswd == "" && R.Default.Rlogin == "")
             {
                 dialogShow();
             }
@@ -1979,6 +1981,7 @@ namespace SklepexPOL.ViewModel
                 R.Default.TodayDate = DateTime.Now;
                 R.Default.SoldItemsString = "";
                 R.Default.IsGameSaved = true;
+                onPropertyChanged(nameof(IsSavedGame));
                 R.Default.Save();
                 onPropertyChanged(nameof(IsSavedGame));
 
