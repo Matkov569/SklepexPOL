@@ -11,12 +11,9 @@ namespace SklepexPOL.DAL
     using SklepexPOL.Model;
     class DBConnection
     {
-        private MySqlConnectionStringBuilder stringBuilder = new MySqlConnectionStringBuilder();
         private MySqlConnection connection;
 
         MySqlConnectionStringBuilder connect = new MySqlConnectionStringBuilder();
-
-        private static string ALL_NASTANIE_QUERY = "SELECT * FROM nastanie";
 
         private static DBConnection instance = null;
         public static DBConnection Instance
@@ -29,19 +26,8 @@ namespace SklepexPOL.DAL
             }
         }
 
-        public MySqlConnection Connection => new MySqlConnection(stringBuilder.ToString());
-
-
         private DBConnection()
         {
-            stringBuilder.UserID = Properties.Settings.Default.userID;
-            //stringBuilder.UserID = Properties.Settings.Default.Rlogin;
-            stringBuilder.Server = Properties.Settings.Default.server;
-            stringBuilder.Database = Properties.Settings.Default.database;
-            stringBuilder.Port = Properties.Settings.Default.port;
-            stringBuilder.Password = Properties.Settings.Default.passwd;
-            //stringBuilder.Password = Properties.Settings.Default.Rpasswd;
-
             connect.UserID = Properties.Settings.Default.Rlogin;
             connect.Server = Properties.Settings.Default.server;
             connect.Port = Properties.Settings.Default.port;
@@ -50,34 +36,7 @@ namespace SklepexPOL.DAL
             connect.AllowBatch = true;
             connect.Database = "sklepexPOL";
         }
-
-        public List<NaStanie> GetNaStanies()
-        {
-            List<NaStanie> nastanie = new List<NaStanie>();
-            using(connection = new MySqlConnection(stringBuilder.ToString()))
-            {
-                MySqlCommand command = new MySqlCommand(ALL_NASTANIE_QUERY,connection);
-                connection.Open();
-                var dataReader = command.ExecuteReader();
-                if (dataReader.HasRows)
-                {
-                    //while(dataReader.Read())
-                    //        nastanie.Add(new Country(dataReader["nazwa"].ToString(),(int)dataReader["ilosc"].ToString(),(int)dataReader["cena"],(int)dataReader["wysokosc"].ToString,(int)dataReader["marza"].ToString,(int)dataReader["magazyn"];
-
-                }
-                else
-                {
-                    Console.WriteLine("Brak wynikow zapytania");
-                }
-                connection.Close();
-
-            }
-
-            return nastanie;
-
-        }
-
-        
+ 
         //czy jest po³¹czenie z baz¹
         public bool IsConnection()
         {
@@ -519,11 +478,13 @@ namespace SklepexPOL.DAL
         }
 
         //dodawanie produktów z zamówienia do stanu
-        public void delivery(DateTime Today)
+        public string delivery(DateTime Today)
         {
+            string message = "";
             Console.WriteLine("delivery");
-            string query = "Select ID_zam, Produkt, Ilosc from zamowienia " +
-                "join pro_zam on zamowienia.ID_zam = pro_zam.Zamowienie " +
+            List<string> usedIDS = new List<string>();
+            string query = "Select ID_zam, Produkt, Ilosc, m.Nazwa from zamowienia " +
+                "join pro_zam on zamowienia.ID_zam = pro_zam.Zamowienie JOIN magazyny m ON zamowienia.Magazyn = m.ID_mag " +
                 "Where ID_zam > 0 AND Data_dostarczenia = '" + Today.ToString("yyyy-MM-dd") + "'";
             using (connection = new MySqlConnection(connect.ToString()))
             {
@@ -532,6 +493,9 @@ namespace SklepexPOL.DAL
                 var result = command.ExecuteReader();
                 while (result.Read())
                 {
+                    if(!usedIDS.Contains(result["ID_zam"].ToString()))
+                        message += "Zamówienie #" + result["ID_zam"].ToString() + " - " + result["Nazwa"].ToString() + "\n";
+                    usedIDS.Add(result["ID_zam"].ToString());
                     Console.WriteLine("del - foreach");
                     string subquery = "Insert into stan Values (NULL, " +
                         result["Ilosc"].ToString() + ", " +
@@ -541,6 +505,7 @@ namespace SklepexPOL.DAL
                 }
                 connection.Close();
             }
+            return message;
         }
     }
 }

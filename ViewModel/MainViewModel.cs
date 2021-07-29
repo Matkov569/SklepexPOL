@@ -51,8 +51,6 @@ namespace SklepexPOL.ViewModel
         }
         private void initialize()
         {
-            R.Default.Rpasswd = "";
-            R.Default.Rlogin = "";
             //jeśli użytkownik nie podał dostępu do mysql
             if (R.Default.Rpasswd == "" && R.Default.Rlogin == "")
             {
@@ -239,13 +237,17 @@ namespace SklepexPOL.ViewModel
             {
                 //{"produkt #id_zam":[ilosc, cena, wysokość podatku, marża dostawcy, 
                 //termin ważności(ile dni zostało), id_zam, id_stan]}
+                Console.WriteLine("update stan set Ilosc = (Ilosc - " + item.Value[0] + ") where ID_stan = " + item.Value[6]);
                 mysql.execute("update stan set Ilosc = (Ilosc - " + item.Value[0] + ") where ID_stan = " + item.Value[6]);
             }
             Console.WriteLine("koniec foreacha");
+            mysql.execute("call Cleaner()");
+            Console.WriteLine("koniec cleanera");
+
             //jeśli jest dostawa - dodaj produkty na stan
             if (IsDeliveryDay)
             {
-                mysql.delivery(TodayDate);
+                OrderInfo = mysql.delivery(TodayDate);
             }
 
             //wczytanie z bazy liczby towarów na stanie
@@ -361,21 +363,6 @@ namespace SklepexPOL.ViewModel
             StorageValue = storage;
 
             CategoriesCounter = mysql.catsCount();
-
-            List<structs.dostawcy> dostawcy = mysql.Sellers();
-            foreach (structs.dostawcy item in dostawcy)
-                ListOfSellers.Add(item);
-
-            List<List<structs.produkty>> produkty = mysql.SellersOffer(dostawcy);
-            foreach (List<structs.produkty> item in produkty)
-            {
-                structs.produktyHandler listOfProducts = new structs.produktyHandler();
-                foreach (structs.produkty produkt in item)
-                {
-                    listOfProducts.Add(produkt);
-                }
-                ListOfListOfProducts.Add(listOfProducts);
-            }
 
             shopInfoUpdate();
 
@@ -939,6 +926,8 @@ namespace SklepexPOL.ViewModel
                     onPropertyChanged(nameof(cartList));
                     onPropertyChanged(nameof(ShoppingCart));
                     onPropertyChanged(nameof(DeliveryEnabled));
+                    onPropertyChanged(nameof(OrderCost));
+                    onPropertyChanged(nameof(OrderCostV));
                     ProductCountS = "";
                 }, arg => 
                 //wpisano liczbe większą niż 0 w ilości
@@ -967,6 +956,8 @@ namespace SklepexPOL.ViewModel
                     onPropertyChanged(nameof(cartList));
                     onPropertyChanged(nameof(ShoppingCart));
                     onPropertyChanged(nameof(DeliveryEnabled));
+                    onPropertyChanged(nameof(OrderCost));
+                    onPropertyChanged(nameof(OrderCostV));
                 },null);
             }
         }
@@ -984,6 +975,8 @@ namespace SklepexPOL.ViewModel
                     onPropertyChanged(nameof(cartList));
                     onPropertyChanged(nameof(ShoppingCart));
                     onPropertyChanged(nameof(DeliveryEnabled));
+                    onPropertyChanged(nameof(OrderCost));
+                    onPropertyChanged(nameof(OrderCostV));
 
                 }, arg => cartList.Items.Count > 0);
             }
@@ -1031,7 +1024,7 @@ namespace SklepexPOL.ViewModel
             //mysql => insert into zamowienia ... Data dostarczenia = dzisiaj + czas dostawy + 1 (jutro wyślą dopiero) 
             string query = "Insert into zamowienia(Data_zamowienia, Data_dostarczenia, Magazyn, Koszt) values('" +
                TodayDate.ToString("yyyy-MM-dd") + "', '" +
-               DateTime.Now.AddDays(SelectedSeller.DDaysV + 1).ToString("yyyy-MM-dd") + "', " +
+               TodayDate.AddDays(SelectedSeller.DDaysV + 1).ToString("yyyy-MM-dd") + "', " +
                SelectedSeller.ID + ", " +
                cartList.CostSum().ToString().Replace(',', '.') + ")";
             Console.WriteLine(query);
@@ -1055,6 +1048,8 @@ namespace SklepexPOL.ViewModel
                 strConv.money(cartList.CostSum()),
                 DeliveryLook));
             OrderClear.Execute(null);
+            onPropertyChanged(nameof(OrderCost));
+            onPropertyChanged(nameof(OrderCostV));
         }
         #endregion
 
@@ -1103,6 +1098,7 @@ namespace SklepexPOL.ViewModel
         }
         public void DeliveriesToListView()
         {
+            ordersList = null;
             ordersList = new structs.zamowieniaHandler();
             //wczytaj z mysql zamowienia (widok dodostarczenia)
             List<structs.zam> list = mysql.orders();
@@ -1119,6 +1115,8 @@ namespace SklepexPOL.ViewModel
                     Action =  DeliveryLook});
                 storage += item.Count;
             }
+            onPropertyChanged(nameof(ordersList));
+            onPropertyChanged(nameof(Deliveries));
             ReservedStorageSpace = storage;
         }
 
@@ -1865,6 +1863,19 @@ namespace SklepexPOL.ViewModel
             }
         }
 
+
+        //textblock z informacjami o dostarczonych zamówieniach
+        private string orderInfo;
+        public string OrderInfo
+        {
+            get { return orderInfo; }
+            set
+            {
+                orderInfo = value;
+                onPropertyChanged(nameof(OrderInfo));
+            }
+        }
+
         #endregion
 
         #region nowa gra
@@ -1913,7 +1924,10 @@ namespace SklepexPOL.ViewModel
             bool confirm = false;
             //jeśli jest zapis
             if (R.Default.IsGameSaved)
-                if (intercom.YesOrNo("Wykryto zapisaną grę.\nCzy na pewno chcesz utworzyć nowy zapis gry?\nPoprzedni zapis zostanie usunięty bezpowrotnie!", "Czy chcesz utworzyć nową grę?"))
+                if (intercom.YesOrNo("Wykryto zapisaną grę.\n" +
+                    "Czy na pewno chcesz utworzyć nowy zapis gry?\n" +
+                    "Poprzedni zapis zostanie usunięty bezpowrotnie!", 
+                    "Czy chcesz utworzyć nową grę?"))
                     confirm = true;
 
             //jeśli nie ma zapisu lub jest i jest zgoda na nadpisanie
@@ -1922,59 +1936,10 @@ namespace SklepexPOL.ViewModel
                 //sql theblip
                 mysql.execute("call TheBlip()");
                 //mysql => SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
-                mysql.execute("SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO'; Insert Into zamowienia Values(0, CURDATE(), CURDATE(), 0, 0)");
+                mysql.execute("SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO'; " +
+                    "Insert Into zamowienia Values(0, CURDATE(), CURDATE(), 0, 0)");
                 //mysql => Insert Into zamowienia Values(0,CURDATE(),CURDATE(),0,0);
 
-                //typ sklepu
-                /*
-                switch (SelectedShopType)
-                {
-                    //spożywczy
-                    case 0:
-                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
-                        break;
-                    //warzywniak
-                    case 1:
-                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
-                        break;
-                    //RTV AGD
-                    case 2:
-                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
-                        break;
-                    //mięsny
-                    case 3:
-                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
-                        break;
-                    //drogeria
-                    case 4:
-                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
-                        break;
-                    //butik
-                    case 5:
-                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
-                        break;
-                    //papierniczy
-                    case 6:
-                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
-                        break;
-                    //piekarnia
-                    case 7:
-                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
-                        break;
-                    //ogrodniczy
-                    case 8:
-                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
-                        break;
-                    //market
-                    case 9:
-                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
-                        break;
-                    //monopolowy
-                    case 10:
-                        //sql insert into stan (Ilosc,Produkt,Zamowienie) values (500,,0), (500,,0), (500,,0), (500,,0), (500,,0);
-                        break;
-                }
-                */
                 mysql.execute("Insert into stan (Ilosc,Produkt,Zamowienie) values " +
                     "(50,3,0), (50,10,0), (50,24,0), (50,26,0), (10,29,0), (10,44,0)");
                 mysql.execute("Insert Into pro_zam Values " +
@@ -1992,9 +1957,8 @@ namespace SklepexPOL.ViewModel
                 R.Default.TodayDate = DateTime.Now;
                 R.Default.SoldItemsString = "";
                 R.Default.IsGameSaved = true;
-                onPropertyChanged(nameof(IsSavedGame));
                 R.Default.Save();
-                onPropertyChanged(nameof(IsSavedGame));
+                IsSavedGame = true;
 
                 NGVis = Visibility.Collapsed;
                 DateVis = Visibility.Visible;

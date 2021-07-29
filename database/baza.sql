@@ -218,7 +218,7 @@ DROP VIEW IF EXISTS osklepie;
 Create view doDostarczenia AS
 SELECT ID_zam, Data_zamowienia, Data_dostarczenia, m.Nazwa, Koszt 
 FROM zamowienia JOIN Magazyny m ON m.ID_mag = Zamowienia.Magazyn
-Where Data_dostarczenia >= CURDATE()
+Where Data_dostarczenia >= (select Dzisiaj from info)
 Order By Data_dostarczenia asc, Data_zamowienia asc;
 
 
@@ -285,6 +285,11 @@ WHERE z.Zamowienie = id
 ORDER BY p.Nazwa ASC ;;
 DELIMITER ;
 
+
+CREATE PROCEDURE Cleaner()
+DELETE FROM stan WHERE Produkt = null;
+
+
 DELIMITER ;;
 CREATE PROCEDURE TheBlip()
 BEGIN
@@ -305,14 +310,11 @@ UPDATE info SET Liczba_zamowien = Liczba_zamowien + 1;
 
 DELIMITER ;;
 CREATE TRIGGER PaniWiesia 
-AFTER UPDATE ON stan
+Before UPDATE ON stan
 FOR EACH ROW
 BEGIN
 IF new.Ilosc=0 THEN
-DELETE FROM stan WHERE new.Ilosc=0;
+SET new.Produkt = null;
 END IF;
 END ;;
 DELIMITER ;
-
-
-

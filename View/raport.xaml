@@ -33,7 +33,7 @@
         </StackPanel>
         <StackPanel  Margin="11" Grid.Row="0" Grid.Column="1" Visibility="{Binding IDD}">
             <TextBlock FontSize="22" FontFamily="Arial" HorizontalAlignment="Center" Margin="10">Dzisiejsze dostawy:</TextBlock>
-            <TextBlock  FontSize="20" FontFamily="Arial">Zamówienie nr 4 - Mięsopol</TextBlock>
+            <TextBlock  FontSize="20" FontFamily="Arial" Text="{Binding OrderInfo}"/>
         </StackPanel>
         <StackPanel  Margin="10" Grid.Row="2" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
             <TextBlock Margin="0,0,10,0" FontSize="18" VerticalAlignment="Center">Wynagrodzenie pracowników: </TextBlock>
