@@ -52,7 +52,7 @@ namespace SklepexPOL.ViewModel
         private void initialize()
         {
             R.Default.Rpasswd = "";
-            R.Default.Rlogin = "" ;
+            R.Default.Rlogin = "";
             //jeśli użytkownik nie podał dostępu do mysql
             if (R.Default.Rpasswd == "" && R.Default.Rlogin == "")
             {
@@ -119,6 +119,7 @@ namespace SklepexPOL.ViewModel
                 
             }
             
+
         }
         private async Task dialogShow()
         {
@@ -249,6 +250,22 @@ namespace SklepexPOL.ViewModel
 
             //wczytanie z bazy liczby towarów na stanie
             OnHouseItems = mysql.onHouse(TodayDate);
+
+            bool anotherRead = false;
+            //czasem coś sie sypnie i przedmioty mają ujemny stan
+            foreach (KeyValuePair<string, double[]> item in OnHouseItems)
+            {
+                if (item.Value[0] < 0)
+                {
+                    anotherRead = true;
+                    //{"produkt #id_zam":[ilosc, cena, wysokość podatku, marża dostawcy, 
+                    //termin ważności(ile dni zostało), id_zam, id_stan]}
+                    mysql.execute("delete from stan where ID_stan = " + item.Value[6]);
+                }
+            }
+
+            if(anotherRead)
+                OnHouseItems = mysql.onHouse(TodayDate);
 
             //generowanie listview'ów
             OnHouseToListView(OnHouseItems);
@@ -1564,20 +1581,14 @@ namespace SklepexPOL.ViewModel
             MoneyBalance = info["Saldo"];
             MoneyIncome = info["Dochod_dzienny"];
             MoneyExpense = info["Wydatki_dzienne"];
-            Console.WriteLine("int");
             TodayClientsValue = (int)info["Ruch"];
-            Console.WriteLine("int");
             ShopEmployees = (int)info["Liczba_pracownikow"];
-            Console.WriteLine("int");
             ShopType = (int)info["Rodzaj"];
-            Console.WriteLine("int");
             ShopLevel = (int)info["Poziom"];
-            Console.WriteLine("int");
             ShopMargin = info["Marza"];
             RentValue = info["oplaty_miesieczne"];
             EmployeesSalary = info["wynagrodzenie"];
             StorageSize = (int)info["pojemnosc_magazynu"];
-            Console.WriteLine("int");
 
             Dictionary<string, string> infoS = mysql.shopInfo();
             ShopName = infoS["Nazwa"];
