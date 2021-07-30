@@ -208,7 +208,7 @@ namespace SklepexPOL.ViewModel
             //muzyczka
             if (IsDeliveryDay)
                 player.Open(new Uri(@"../../sounds/delivery.mp3", UriKind.Relative));
-            else if (MoneyBalance <= -5000)
+            else if (MoneyBalance <= -5000 || (R.Default.LvlDays > 7 && R.Default.warning))
                 player.Open(new Uri(@"../../sounds/trombone.mp3", UriKind.Relative));
             else
             {
@@ -228,18 +228,22 @@ namespace SklepexPOL.ViewModel
             //generowanie klientów i ich zakupów
             TodayClientsValue = randomizer.clientsCreator(TodayClientsValue, ShopMargin, ShopState, ShopLevel, TodayDate);
             SoldItems = randomizer.shopListGenerator(TodayClientsValue, OnHouseItems, ShopLevel, TodayDate);
-            R.Default.ClientsCountValue = TodayClientsValue;
-            R.Default.SoldItemsString = TSI();
-            R.Default.Save();
+            
 
             //mysql => odjęcie sprzedanych towarów z bazy
             foreach (KeyValuePair<string, double[]> item in SoldItems)
             {
                 //{"produkt #id_zam":[ilosc, cena, wysokość podatku, marża dostawcy, 
                 //termin ważności(ile dni zostało), id_zam, id_stan]}
+                if (OnHouseItems[item.Key][0] - item.Value[0] < 0)
+                    item.Value[0] += OnHouseItems[item.Key][0] - item.Value[0];
                 Console.WriteLine("update stan set Ilosc = (Ilosc - " + item.Value[0] + ") where ID_stan = " + item.Value[6]);
                 mysql.execute("update stan set Ilosc = (Ilosc - " + item.Value[0] + ") where ID_stan = " + item.Value[6]);
+
             }
+            R.Default.ClientsCountValue = TodayClientsValue;
+            R.Default.SoldItemsString = TSI();
+            R.Default.Save();
             Console.WriteLine("koniec foreacha");
             mysql.execute("call Cleaner()");
             Console.WriteLine("koniec cleanera");
@@ -292,21 +296,14 @@ namespace SklepexPOL.ViewModel
             //mysql => update info set Wydatki_dzienne = MoneyExpense
             mysql.execute("update info set Wydatki_dzienne = "+ MoneyExpense.ToString().Replace(',', '.'));
 
-            //sprawdzenie stanu, rodzaju i poziomu sklepu
-            int oldType = ShopType;
-            shopInfoUpdate();
-            if(ShopType != oldType)
-            {
-                //mysql - zmień typ sklepu
-                mysql.execute("update info set Rodzaj = " + ShopType);
-            }
-
             //sprawdzenie czy sklep nie powinien mieć obniżonego poziomu
-            if (R.Default.LvlDays == 7)
+            if (R.Default.LvlDays > 7)
             {
+                Console.WriteLine("warunek");
                 if (R.Default.warning)
                 {
-                    intercom.message("Twój sklep się stoczył.\n" +
+                    Console.WriteLine("warning");
+                    intercom.message("Twój sklep upadł ponownie.\n" +
                         "Tu kończy się historia twojego sklepu.\n" +
                         "R. I. P. " + ShopName + "\n" + 
                         OpenDate.ToString("dd/MM/yyyy") + " - " + TodayDate.ToString("dd/MM/yyyy"), 
@@ -315,21 +312,30 @@ namespace SklepexPOL.ViewModel
                 }
                 else
                 {
-                    intercom.message("Twój sklep przez 7 dni nie spełniał wymogów swojego poziomu.\n" +
-                        "Jego poziom zostaje obniżony.\n\n" +
-                        "Jeśli ta sytuacja powtórzy się, twój sklep zostanie zamknięty",
-                        "Regresja sklepu");
+                    Console.WriteLine("niew warning");
+                    if(ShopLevel==1)
+                        intercom.message("Twój sklep przez 7 dni nie posiadał żadnego produktu na stanie!.\n" +
+                            "Jego poziom zostaje obniżony.\n\n" +
+                            "Jeśli ta sytuacja powtórzy się, twój sklep zostanie zamknięty",
+                            "Regresja sklepu");
+                    else
+                        intercom.message("Twój sklep przez 7 dni nie spełniał wymogów swojego poziomu.\n" +
+                            "Jego poziom zostaje obniżony.\n\n" +
+                            "Jeśli ta sytuacja powtórzy się, twój sklep zostanie zamknięty",
+                            "Regresja sklepu");
                     ShopLevel -= 1;
                     R.Default.LvlDays = 0;
                     R.Default.warning = true;
-
+                    if (ShopLevel == 0) mysql.execute("update info set Ruch = " + 0);
+                    else mysql.execute("update info set Ruch = " + (int)(TodayClientsValue * 0.1));
+                    //mysql zmniejsz wartość lvl
+                    mysql.execute("update info set Poziom = " + ShopLevel);
+                    appOpen();
                 }
-
-                //mysql zmniejsz wartość lvl
-                mysql.execute("update info set Poziom = " + ShopLevel);
+                
             }
 
-            //info o funduszach
+            //info o funduszach i lvlupie
             if (MoneyBalance < -1000)
             {
                 Console.WriteLine("straty uuu");
@@ -339,19 +345,24 @@ namespace SklepexPOL.ViewModel
             }
             else
             {
+                //czy można lewelować
                 if (IsLvlUp && MoneyBalance > 0)
                 {
                     Console.WriteLine("nie straty uuu");
                     IsAlert = true;
-                    AlertText = "Istnieje możliwość zwiększenia poziomu sklepu.";
+                    if (ShopLevel != 0) AlertText = "Istnieje możliwość zwiększenia poziomu sklepu.";
+                    else AlertText = "Sklep będzie pustostanem, dopóki nie podniesiesz jego poziomu.";
                     onPropertyChanged(nameof(AlertText));
+                }
+                if (ShopLevel == 0 && IsDeliveryDay)
+                {
+                    IsAlert = true;
+                    AlertText = "Sklep będzie pustostanem, dopóki nie podniesiesz jego poziomu.";
                 }
                 else
                     IsAlert = false;
             }
             
-            
-
             appOpen();
 
             int storage = 0;
@@ -364,8 +375,18 @@ namespace SklepexPOL.ViewModel
 
             CategoriesCounter = mysql.catsCount();
 
-            shopInfoUpdate();
+            //sprawdzenie stanu, rodzaju i poziomu sklepu
+            int oldType = ShopType;
+            shopInfoUpdate(true);
+            if (ShopType != oldType)
+            {
+                //mysql - zmień typ sklepu
+                mysql.execute("update info set Rodzaj = " + ShopType);
+            }
 
+            onPropertyChanged(nameof(ActualTab));
+            onPropertyChanged(nameof(ItemsList));
+            onPropertyChanged(nameof(Deliveries));
             //chwila odpoczynku
             await Task.Delay(3000);
 
@@ -393,15 +414,18 @@ namespace SklepexPOL.ViewModel
             appOpen();
 
             //inicjacja spisu produktów na stanie z bazy
+            Console.WriteLine(TodayDate);
             OnHouseItems = mysql.onHouse(TodayDate);
-
+            Console.WriteLine("after onhouse");
             int storage = 0;
-            foreach(KeyValuePair<string, double[]> item in OnHouseItems)
+            foreach (KeyValuePair<string, double[]> item in OnHouseItems)
             {
+                Console.WriteLine("foreach");
                 storage += (int)item.Value[0];
             }
 
             StorageValue = storage;
+            Console.WriteLine("after foreach");
 
             CategoriesCounter = mysql.catsCount();
 
@@ -422,10 +446,14 @@ namespace SklepexPOL.ViewModel
             Console.WriteLine("po ordersach");
             //wczytanie listy sprzedawców i ich produktów
 
+            ListOfSellers = null;
+            ListOfSellers = new structs.dostawcyHandler();
             List<structs.dostawcy> dostawcy = mysql.Sellers();
             foreach (structs.dostawcy item in dostawcy)
                 ListOfSellers.Add(item);
 
+            ListOfListOfProducts = null;
+            ListOfListOfProducts = new structs.produktyHandlerList();
             List<List<structs.produkty>> produkty = mysql.SellersOffer(dostawcy);
             foreach (List<structs.produkty> item in produkty)
             {
@@ -437,7 +465,7 @@ namespace SklepexPOL.ViewModel
                 ListOfListOfProducts.Add(listOfProducts);
             }
 
-            shopInfoUpdate();
+            shopInfoUpdate(false);
 
             //chwila odpoczynku
             await Task.Delay(3000);
@@ -1044,7 +1072,7 @@ namespace SklepexPOL.ViewModel
                 id.ToString(),
                 SelectedSeller.Name,
                 TodayDate.ToString("dd/MM/yyyy"),
-                DateTime.Now.AddDays(SelectedSeller.DDaysV+1).ToString("dd/MM/yyyy"),
+                TodayDate.AddDays(SelectedSeller.DDaysV+1).ToString("dd/MM/yyyy"),
                 strConv.money(cartList.CostSum()),
                 DeliveryLook));
             OrderClear.Execute(null);
@@ -1062,6 +1090,7 @@ namespace SklepexPOL.ViewModel
         }
         public void OnHouseToListView(Dictionary<string, double[]> dict)
         {
+            Console.WriteLine("OnHouseToListView");
             itemsList = new structs.stanHandler();
             foreach (KeyValuePair<string, double[]> product in dict)
             {
@@ -1606,7 +1635,7 @@ namespace SklepexPOL.ViewModel
                     ShopMargin = (double)p;
                     mysql.execute("update info set marza = " + ShopMargin.ToString().Replace(',','.'));
                     onPropertyChanged(nameof(MarginString));
-                    shopInfoUpdate();
+                    shopInfoUpdate(false);
                     IsMarginSliderVisible = Visibility.Collapsed;
                 }, null);
             }
@@ -1632,7 +1661,7 @@ namespace SklepexPOL.ViewModel
                     ShopEmployees += 1;
                     //sql update info set liczba_pracownikow = liczba_pracownikow + 1;
                     mysql.execute("update info set liczba_pracownikow = liczba_pracownikow + 1");
-                    shopInfoUpdate();
+                    shopInfoUpdate(false);
                 }, null);
             }
         }
@@ -1645,13 +1674,13 @@ namespace SklepexPOL.ViewModel
                     ShopEmployees -= 1;
                     //sql update info set liczba_pracownikow = liczba_pracownikow - 1;
                     mysql.execute("update info set liczba_pracownikow = liczba_pracownikow - 1");
-                    shopInfoUpdate();
+                    shopInfoUpdate(false);
                 }, arg => ShopEmployees > 0);
             }
         }
 
         //Aktualizacja informacji o sklepie (stan, poziom, rodzaj)
-        public void shopInfoUpdate()
+        public void shopInfoUpdate(bool dayChange)
         {
             //określenie rodzaju, stanu i poziomu
             //poziom
@@ -1685,38 +1714,56 @@ namespace SklepexPOL.ViewModel
                     counter2++;
 
                 }
+            Console.WriteLine("LVL: " + ShopLevel);
+            Console.WriteLine("onhouse: " + OnHouseItems.Count);
+            Console.WriteLine("LVLDAYS: " + R.Default.LvlDays);
+            Console.WriteLine("counter2: " + counter2);
+            Console.WriteLine("emps: " + ShopEmployees);
             switch (ShopLevel)
             {
                 case 1:
                     //czy spełnia warunki obecnego poziomu
-                    if (ShopEmployees < 0 && OnHouseItems.Count < 1)
-                        R.Default.LvlDays += 1;
+                    if (OnHouseItems.Count < 1)
+                    {
+                        if (dayChange) R.Default.LvlDays += 1;
+                    }
                     //czy spełnia warunki podniesienia poziomu
                     else if (ShopEmployees >= 1 && counter2 >= 2)
+                    {
+
                         IsLvlUp = true;
+                    }
                     break;
                 case 2:
-                    if (ShopEmployees < 1 && counter2<2)
-                        R.Default.LvlDays += 1;
+                    if (ShopEmployees < 1 || counter2 < 2)
+                    {
+                        if (dayChange) R.Default.LvlDays += 1;
+                    }
                     else if (ShopEmployees >= 10 && counter3 >= 5)
                         IsLvlUp = true;
                     break;
                 case 3:
-                    if (ShopEmployees < 10 && counter3 < 5)
-                        R.Default.LvlDays += 1;
+                    if (ShopEmployees < 10 || counter3 < 5)
+                    {
+                        if (dayChange) R.Default.LvlDays += 1;
+                    }
                     else if (ShopEmployees >= 18 && counter4 >= 10)
                         IsLvlUp = true;
                     break;
                 case 4:
-                    if (ShopEmployees < 18 && counter4 < 10)
-                        R.Default.LvlDays += 1;
+                    if (ShopEmployees < 18 || counter4 < 10)
+                    {
+                        if (dayChange) R.Default.LvlDays += 1;
+                    }
                     else if (ShopEmployees >= 30 && counter5 >= 15)
                         IsLvlUp = true;
                     break;
                 case 5:
                     //czy spełnia warunki obecnego poziomu
-                    if (ShopEmployees < 30 &&  counter5 < 15)
-                        R.Default.LvlDays += 1;
+                    if (ShopEmployees < 30 || counter5 < 15)
+                    {
+                        if (dayChange) R.Default.LvlDays += 1;
+                    }
                     break;
                 default:
                     //czy spełnia warunki podniesienia poziomu
@@ -1724,7 +1771,7 @@ namespace SklepexPOL.ViewModel
                         IsLvlUp = true;
                     break;
             }
-
+            R.Default.Save();
             //stan
             switch (ShopLevel)
             {
@@ -1780,11 +1827,12 @@ namespace SklepexPOL.ViewModel
                     ShopState = 1;
                     break;
             }
-            Console.WriteLine(ShopState);
+            Console.WriteLine("ShopState: " + ShopState);
 
             //rodzaj
-            
-            if(CategoriesCounter.Count > 1)
+            Console.WriteLine("CatsCounter: " + CategoriesCounter.Count);
+
+            if (CategoriesCounter.Count > 1)
             {
                 double[] percentages = new double[15] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
                 foreach(KeyValuePair<int, int> items in CategoriesCounter)
@@ -1800,7 +1848,7 @@ namespace SklepexPOL.ViewModel
                 else if (percentages[14] >= 0.85) ShopType = 11;
                 else ShopType = 10;
             }
-            else
+            else if (CategoriesCounter.Count == 1)
             {
                 int type = CategoriesCounter.Keys.Single();
                 if (type == 1) ShopType = 2;
@@ -1818,8 +1866,7 @@ namespace SklepexPOL.ViewModel
                 else if (type == 13) ShopType = 1;
                 else if (type == 14) ShopType = 1;
                 else ShopType = 11;
-            }
-            
+            }           
         }
 
         //czy można levelować
@@ -1846,9 +1893,12 @@ namespace SklepexPOL.ViewModel
                     //sql zwiększ level
                     mysql.execute("update info set Poziom = Poziom + 1");
                     mysql.execute("update info set Najwyzszy_poziom = Poziom");
+                    if (ShopLevel == 0) mysql.execute("update info set Ruch = " + 10);
                     //wczytaj dane dla levelu
                     appOpen();
-                    ShopLevel += 1;
+                    IsLvlUp = false;
+                    R.Default.LvlDays = 0;
+                    R.Default.Save();
                 }, null);
             }
         }
@@ -1954,6 +2004,8 @@ namespace SklepexPOL.ViewModel
                 mysql.execute("Update info Set Liczba_zamowien = 0");
 
                 R.Default.ClientsCountValue = 10;
+                R.Default.warning = false;
+                R.Default.LvlDays = 0;
                 R.Default.TodayDate = DateTime.Now;
                 R.Default.SoldItemsString = "";
                 R.Default.IsGameSaved = true;

@@ -223,7 +223,7 @@ Order By Data_dostarczenia asc, Data_zamowienia asc;
 
 
 Create view naStanie AS
-Select p.Nazwa, s.Ilosc, p.Cena, pod.Wysokosc, m.Marza, (z.Data_dostarczenia + INTERVAL p.Termin_przydatnosci DAY) as Termin_przydatnosci, z.Magazyn, s.ID_stan
+Select p.Nazwa, s.Ilosc, p.Cena, pod.Wysokosc, m.Marza, (z.Data_dostarczenia + INTERVAL p.Termin_przydatnosci DAY) as Termin_przydatnosci, z.Magazyn, s.ID_stan, z.ID_zam
 FROM
 stan s 
 JOIN 
@@ -287,7 +287,7 @@ DELIMITER ;
 
 
 CREATE PROCEDURE Cleaner()
-DELETE FROM stan WHERE Produkt = null;
+DELETE FROM stan WHERE Produkt Is NULL;
 
 
 DELIMITER ;;

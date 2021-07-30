@@ -225,13 +225,14 @@ namespace SklepexPOL.DAL
             {
                 MySqlCommand command = new MySqlCommand(query, connection);
                 connection.Open();
+                Console.WriteLine("onHouse connection");
                 var result = command.ExecuteReader();
                 if (result.HasRows)
                 {
                     while (result.Read())
                     {
                         dict.Add(
-                            result["Nazwa"].ToString() + " #" + result["Magazyn"].ToString(),
+                            result["Nazwa"].ToString() + " #" + result["ID_zam"].ToString(),
                             new double[]
                             {
                                 double.Parse(result["Ilosc"].ToString()),
