@@ -194,6 +194,7 @@
     </EmbeddedResource>
     <Resource Include="fonts\DS-DIGIB.TTF" />
     <Resource Include="fonts\DS-DIGI.TTF" />
+    <None Include="database\instrukcja.pdf" />
     <None Include="Properties\Settings.settings">
       <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
