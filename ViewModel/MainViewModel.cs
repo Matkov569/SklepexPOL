@@ -591,7 +591,7 @@ namespace SklepexPOL.ViewModel
         private void showInfo()
         {
             //utworzyć instrukcje i podpiąc jej plik
-            System.Diagnostics.Process.Start("test.pdf");            
+            System.Diagnostics.Process.Start("../../database/instrukcja.pdf");            
         }
         
         //zamykanie programu
